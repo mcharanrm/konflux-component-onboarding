@@ -1,0 +1,54 @@
+---
+# Prefix used when generating GitHub repository names
+repository_name_prefix: "fedora-on-konflux-perf-scale-repo-"
+
+# Prefix used when generating Konflux application names
+application_name_prefix: "fedora-on-konflux-perf-scale-application-"
+
+# Prefix used when generating Konflux component names
+component_name_prefix: "fedora-on-konflux-perf-scale-component-"
+
+# Absolute path to the Konflux tenant workspace directory
+konflux_tenant_workspace_path: "/home/cmusali/konflux/tenants-config/cluster/kfluxfedorap01/konflux-fedora-perfscale-tenant"
+
+# Directory name used as the base layer for Kustomize configurations
+kustomize_base_dir: "fedora-base"
+
+# Directory containing overlay/patch files for Kustomize
+kustomize_overlay_dir: "fedora-patches"
+
+# Run RPM build with multiple architectures
+build_multi_arch: false
+
+# RPM package source in GitHub
+package_source: "git@github.com:mcharanrm/example-fedora-konflux-libecpg-perf-fork.git"
+
+# Temporary workspace/directory for generating build pipelines, committing it and creating pull requests
+git_workspace_dir: "/tmp"
+
+# Configuration for interacting with the GitHub API
+github_api:
+  base_url: "https://api.github.com"
+  # Endpoint for creating GitHub repositories
+  create_repository:
+    path: "/user/repos"
+    method: "POST"
+    expected_status: 201  
+
+  # Endpoint for adding a repository to a GitHub App installation
+  register_repository:
+    path: "/user/installations/89145558/repositories"
+    method: "PUT"
+    expected_status: 204
+
+  # Endpoint for creating GitHub Pull Requests
+  create_pull_request:
+    path: "/repos/mcharanrm"
+    method: "POST"
+    expected_status: 201
+
+  # Number of retry attempts
+  retries: 60
+
+  # Delay (in seconds) between retry attempts
+  delay_seconds: 60
