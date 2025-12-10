@@ -1,0 +1,129 @@
+---
+- name: Create GitHub Repositories and Kubernetes Manifests for Onboarding Konflux Components/Applications
+  hosts: localhost
+  gather_subset:
+  - '!all'
+  - '!min'
+  - user_dir
+  vars_files:
+  - vars/konflux_repo_app_component_config.yml
+  vars:
+    index_start: "{{ starts_from | default(0) }}"
+    index_end: "{{ ends_at | default(-1) }}"
+    total_items_count: "{{ (index_end | int) - (index_start | int) }}"
+    github_pat_file: "{{ ansible_facts.user_dir }}/.pat"
+  tasks:
+  - name: Running Pre-flight Checks
+    block: 
+    - name: Check if Konflux tenant workspace directory exists
+      ansible.builtin.file:
+        path: "{{ konflux_tenant_workspace_path }}"
+        state: directory
+      check_mode: true
+      register: tenant_workspace_status
+
+    - name: Check if `.pat` file exists
+      ansible.builtin.file:
+        path: "{{ github_pat_file }}"
+        state: file
+  
+    - name: Validate input parameters and workspace state
+      ansible.builtin.assert:
+        that:
+        - total_items_count | int >= 0
+        - not tenant_workspace_status.changed
+        - lookup('file', github_pat_file) != ""
+        success_msg: "All Pre-flight Checks Passed"
+  
+  - name: Configure Konflux Applications and Components with Kustomize
+    block:
+    - name: Set up base Kustomization
+      ansible.builtin.copy:
+        src: "base/"
+        dest: "{{ konflux_tenant_workspace_path }}/{{ kustomize_base_dir }}/"
+
+    - name: Setup overlay/patch for Kustomization
+      ansible.builtin.file:
+        path: "{{ konflux_tenant_workspace_path }}/{{ kustomize_overlay_dir }}"
+        state: directory
+
+    - name: Verify existence of overlay Kustomization file
+      ansible.builtin.file:
+        path: "{{ konflux_tenant_workspace_path }}/{{ kustomize_overlay_dir }}/kustomization.yaml"
+        state: file
+      register: kustomize_file_status
+      ignore_errors: true
+
+    always:
+    - name: Create Kustomization file if missing
+      ansible.builtin.copy:
+        src: "patches/kustomization.yaml"
+        dest: "{{ konflux_tenant_workspace_path }}/{{ kustomize_overlay_dir }}/kustomization.yaml"
+      when: kustomize_file_status.failed
+    
+    - name: Ensure patches are included in root Kustomization
+      ansible.builtin.lineinfile: 
+        path: "{{ konflux_tenant_workspace_path }}/kustomization.yaml"
+        line: "{% filter indent(width=2, first=true) %}- {{ kustomize_overlay_dir }}/{% endfilter %}"
+        insertafter: "^resources:"
+        state: present
+
+  - name: Generate and Map Konflux Applications, Components, and GitHub Repositories
+    block:
+    - name: Retrieve GitHub PAT
+      ansible.builtin.set_fact:
+        github_pat: "{{ lookup('file', github_pat_file) }}"
+    
+    - name: Generate GitHub repository name list
+      ansible.builtin.set_fact:
+        repository_names: "{% set repos = [] %}{% for item in range(index_start|int, index_end|int + 1) %}{{ repos.append({'key': 'git_repo_name', 'value': repository_name_prefix + (item | string)}) }}{% endfor %}{{ repos }}"
+
+    - name: Debug generated repository names
+      ansible.builtin.debug:
+        var: repository_names
+        verbosity: 1
+
+    - name: Generate Konflux application and component name lists
+      ansible.builtin.set_fact:
+        application_names: "{% set apps = [] %}{% for item in range(index_start|int, index_end|int + 1) %}{{ apps.append({'key': 'knflux_app_name', 'value': application_name_prefix + (item | string)}) }}{% endfor %}{{ apps }}"
+        component_names: "{% set comps = [] %}{% for item in range(index_start|int, index_end|int + 1) %}{{ comps.append({'key': 'knflux_comp_name', 'value': component_name_prefix + (item | string)}) }}{% endfor %}{{ comps }}"
+    
+    - name: Debug generated application and component names
+      ansible.builtin.debug:
+        msg: 
+        - "{{ application_names }}"
+        - "{{ component_names }}"
+        verbosity: 1
+    
+    - name: Zip Konflux applications, components, and GitHub repositories
+      ansible.builtin.set_fact:
+        konflux_app_repo_pairs: "{{ application_names | zip(component_names, repository_names) }}"
+    
+    - name: Debug zipped Konflux application/component/GitHub repository pairs
+      ansible.builtin.debug:
+        var: konflux_app_repo_pairs
+        verbosity: 1
+
+    - name: Convert zipped Konflux app/component/repo to list of dictionaries
+      ansible.builtin.set_fact:
+        konflux_app_repo_mappings: "{% set map_values=[] %}{% for item in konflux_app_repo_pairs %}{{ map_values.append(item | items2dict) }}{% endfor %}{{ map_values }}"
+
+    - name: Debug final mapped Konflux application/component/GitHub repository list
+      ansible.builtin.debug:
+        var: konflux_app_repo_mappings
+        verbosity: 1
+  
+  # Create Repositories for the authenticated users, Add the repositories to Konflux Fedora GitHub App installation, and
+  # Generate Kubernetes manifests for creating Konflux applications and components
+  - name: Create Repositories and generate Konflux applications and components
+    block:
+    - name: Run Repository Creation and Konflux Manifest Generation Tasks
+      ansible.builtin.include_tasks:
+        file: tasks/create-repos-and-konflux-manifests.yaml
+      vars:
+        github_api_data: "{{ github_api }}"
+        github_auth_pat: "{{ github_pat }}"
+        konflux_app_repo_mappings_data: "{{ item }}"
+      loop: "{{ konflux_app_repo_mappings }}"
+      loop_control:
+        label: "{{ item.git_repo_name }}"
