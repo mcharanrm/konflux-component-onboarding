@@ -1,0 +1,110 @@
+---
+- name: Generating RPM build pipelines and creating pull requests
+  hosts: localhost
+  gather_subset:
+  - '!all'
+  - '!min'
+  - user_dir
+  vars_files:
+  - vars/konflux_repo_app_component_config.yml
+  vars:
+    index_start: "{{ starts_from | default(0) }}"
+    index_end: "{{ ends_at | default(-1) }}"
+    total_items_count: "{{ (index_end | int) - (index_start | int) }}"
+    github_pat_file: "{{ ansible_facts.user_dir }}/.pat"        
+  tasks:
+  - name: Running Pre-flight Checks
+    block: 
+    - name: Check if `.pat` file exists
+      ansible.builtin.file:
+        path: "{{ github_pat_file }}"
+        state: file
+  
+    - name: Validate input parameters and GitHub PAT file
+      ansible.builtin.assert:
+        that:
+        - total_items_count | int >= 0
+        - lookup('file', github_pat_file) != ""
+        success_msg: "All Pre-flight Checks Passed"
+
+  - name: Generate and map Konflux applications, components, and GitHub repositories
+    block:
+    - name: Retrive GitHub personal-access-token
+      ansible.builtin.set_fact:
+        github_pat: "{{ lookup('file', github_pat_file) }}"
+    
+    - name: Generate GitHub repository name list
+      ansible.builtin.set_fact:
+        repository_names: "{% set repos = [] %}{% for item in range(index_start|int, index_end|int + 1) %}{{ repos.append({'key': 'git_repo_name', 'value': repository_name_prefix + (item | string)}) }}{% endfor %}{{ repos }}"
+
+    - name: Debuge generated git repository names
+      ansible.builtin.debug:
+        var: repository_names
+        verbosity: 1
+
+    - name: Generate Konflux application and component name lists
+      ansible.builtin.set_fact:
+        application_names: "{% set apps = [] %}{% for item in range(index_start|int, index_end|int + 1) %}{{ apps.append({'key': 'knflux_app_name', 'value': application_name_prefix + (item | string)}) }}{% endfor %}{{ apps }}"
+        component_names: "{% set comps = [] %}{% for item in range(index_start|int, index_end|int + 1) %}{{ comps.append({'key': 'knflux_comp_name', 'value': component_name_prefix + (item | string)}) }}{% endfor %}{{ comps }}"
+    
+    - name: Debug generated application and component names
+      ansible.builtin.debug:
+        msg: 
+        - "{{ application_names }}"
+        - "{{ component_names }}"
+        verbosity: 1
+    
+    - name: Zip Konflux applications, components, and GitHub repositories
+      ansible.builtin.set_fact:
+        konflux_app_repo_pairs: "{{ application_names | zip(component_names, repository_names) }}"
+    
+    - name: Debug zipped Konflux application/component/GitHub repository pairs
+      ansible.builtin.debug:
+        var: konflux_app_repo_pairs
+        verbosity: 1
+
+    - name: Convert zipped Konflux app/component/repo to list of dictionaries
+      ansible.builtin.set_fact:
+        konflux_app_repo_mappings: "{% set map_values=[] %}{% for item in konflux_app_repo_pairs %}{{ map_values.append(item | items2dict) }}{% endfor %}{{ map_values }}"
+
+    - name: Debug final mapped Konflux application/component/GitHub repository list
+      ansible.builtin.debug:
+        var: konflux_app_repo_mappings
+        verbosity: 1
+
+  - name: Extract Repository Name from Package Source
+    ansible.builtin.set_fact:
+      package_repository_name: "{{ package_source | basename | split('.') | first }}"
+
+  - name: Extract Tenant Namespace from Workspace Path
+    ansible.builtin.set_fact:
+      konflux_tenant_namespace: "{{ konflux_tenant_workspace_path | basename }}"
+
+  - name: Ensure Workspace Directory Does Not Exist
+    ansible.builtin.file: 
+      path: "{{ git_workspace_dir }}/{{ package_repository_name }}"
+      state: absent
+
+  - name: Clone Git Repository
+    ansible.builtin.git:
+      repo: "{{ package_source }}"
+      dest: "{{ git_workspace_dir }}/{{ package_repository_name }}"
+      single_branch: yes
+      version: master
+    register: clone_repository_status
+
+  - name: Debug Git Clone Status
+    ansible.builtin.debug:
+      var: clone_repository_status
+      verbosity: 1
+  
+  - name: Now generate tekton pipeline files and commit changes in a PR
+    ansible.builtin.include_tasks:
+      file: tasks/create-konflux-build-pipelines.yaml
+    vars:
+      github_api_data: "{{ github_api }}"
+      github_auth_pat: "{{ github_pat }}"
+      konflux_app_repo_mappings_data: "{{ item }}"
+    loop: "{{ konflux_app_repo_mappings }}"
+    loop_control:
+      label: "{{ item.git_repo_name }}"
