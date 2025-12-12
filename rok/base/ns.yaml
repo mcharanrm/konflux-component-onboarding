@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    konflux-ci.dev/type: tenant
+    cost-center: "IN.ENG R&D Performance & Scale.675"
+    description: "RoK, RHEL on Konflux Performance&Scale Work - KONFLUX-8536"
+    insights_cost_management_optimizations: "true"
+  name: perf-rhtap-tenant

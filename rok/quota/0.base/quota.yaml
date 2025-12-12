@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: perf-rhtap-tenant-resource-quota
+spec:
+  hard:
+    # compute
+    limits.memory: 32Gi
+    requests.cpu: "32"
+    requests.memory: 32Gi
+
+    # storage
+    limits.ephemeral-storage: 50Gi
+    requests.storage: 50Gi
+    requests.ephemeral-storage: 50Gi
+    count/persistentvolumeclaims: "20"
+
+    # konflux core API
+    count/applications.appstudio.redhat.com: "512"
+    count/components.appstudio.redhat.com: "512"
+
+    # konflux integration-service API
+    count/integrationtestscenarios.appstudio.redhat.com: "512"
+    count/snapshots.appstudio.redhat.com: "1024"
+
+    # konflux release-service API
+    count/releaseplanadmissions.appstudio.redhat.com: "512"
+    count/releaseplans.appstudio.redhat.com: "512"
+    count/releases.appstudio.redhat.com: "512"
+    count/internalrequests.appstudio.redhat.com: "512"
+
+    # enterprise-contract
+    count/enterprisecontractpolicies.appstudio.redhat.com: "512"
+
+    # tekton-pipelineruns
+    count/pipelineruns.tekton.dev: "2000"
+
+    # secrets
+    count/secrets: "3000"
+
+    # configmaps
+    count/configmaps: "100"
+
+    # jobs
+    count/jobs.batch: "30"
+    count/cronjobs.batch: "30"
+
+    # Konflux - Deprecated
+    #
+    # We don't expect users to rely on the following resources. For some of them 
+    # not event to be present on all clusters.
+    # It's still possible for users or their automation to manage these resources 
+    # on some clusters. That's because CRDs are installed on some clusters and 
+    # because permissions are provided via the `appstudio-*-user-actions` Roles.
+    # This block can be removed once cleanup is completed.
+    count/componentdetectionqueries.appstudio.redhat.com: "0"
+    count/snapshotenvironmentbindings.appstudio.redhat.com: "0"
+    count/buildpipelineselectors.appstudio.redhat.com: "0"
+    count/deploymenttargetclaims.appstudio.redhat.com: "0"
+    count/deploymenttargetclasses.appstudio.redhat.com: "0"
+    count/deploymenttargets.appstudio.redhat.com: "0"
+    count/environments.appstudio.redhat.com: "0"
+    count/promotionruns.appstudio.redhat.com: "0"
+    count/releasestrategies.appstudio.redhat.com: "512"
+
+    count/buildconfigs.build.openshift.io: "30"
+
+    count/statefulsets.apps: "60"
+    count/daemonsets.apps: "30"
+    # End Konflux - Deprecated
