@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+  # JSON patch
+  - target:
+      kind: Namespace
+      name: perf-rhtap-tenant
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: test-rhtap-1578-tenant
+  - target:
+      kind: RoleBinding
+      name: perf-rhtap-tenant-konflux-admins
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: test-rhtap-1578-tenant-konflux-admins
+      - op: add
+        path: /metadata/namespace
+        value: test-rhtap-1578-tenant
+  - target:
+      kind: LimitRange
+      name: perf-rhtap-tenant-resource-limits
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: test-rhtap-1578-tenant-resource-limits
+      - op: add
+        path: /metadata/namespace
+        value: test-rhtap-1578-tenant
+  - target:
+      kind: ResourceQuota
+      name: perf-rhtap-tenant-resource-quota
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: test-rhtap-1578-tenant-resource-quota
+      - op: add
+        path: /metadata/namespace
+        value: test-rhtap-1578-tenant
+
+resources:
+  - ../../base
