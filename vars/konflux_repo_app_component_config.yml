@@ -35,6 +35,12 @@ github_api:
     method: "POST"
     expected_status: 201  
 
+  # Endpoint for deleting GitHub repositories
+  delete_repository:
+    path: "/repos/mcharanrm"
+    method: "DELETE"
+    expected_status: 204
+
   # Endpoint for adding a repository to a GitHub App installation
   register_repository:
     path: "/user/installations/89145558/repositories"
