@@ -4,7 +4,7 @@ kind: Namespace
 metadata:
   labels:
     konflux-ci.dev/type: tenant
-    cost-center: "IN.ENG R&D Performance & Scale.675"
-    description: "RoK, RHEL on Konflux Performance&Scale Work - KONFLUX-8536"
+    cost-center: "IN-ENG-Research-and-Development-Performance-Scale-675"
+    description: "RoK-RHEL-on-Konflux-Performance-Work-KONFLUX-8536"
     insights_cost_management_optimizations: "true"
   name: perf-rhtap-tenant
