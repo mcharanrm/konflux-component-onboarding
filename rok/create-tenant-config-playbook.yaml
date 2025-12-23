@@ -1,0 +1,52 @@
+---
+- name: Generate manifests for Konflux tenant creation
+  hosts: localhost
+  gather_facts: off
+  vars:
+    index_start: "{{ starts_from | default(0) }}"
+    index_end: "{{ ends_at | default(-1) }}"
+    total_items_count: "{{ (index_end | int) - (index_start | int) }}"
+
+    prefix_name: "test-rhtap-"
+    suffix_name: "-tenant"
+  tasks:
+  - name: Run pre-flight checks
+    block:  
+    - name: Validate input parameters
+      ansible.builtin.assert:
+        that:
+        - total_items_count | int >= 0
+        success_msg: "All Pre-flight Checks Passed"
+  
+  - name: Generate tenant names
+    block:
+    - name: Create list of Konflux tenant names
+      ansible.builtin.set_fact:
+        tenants_list: "{% set tenants = [] %}{% for item in range(index_start|int, index_end|int + 1) %}{{ tenants.append({'tenant_name': prefix_name + (item | string) + suffix_name }) }}{% endfor %}{{ tenants }}"
+
+    - name: Debug generated tenant names
+      ansible.builtin.debug:
+        var: tenants_list
+        verbosity: 1
+
+  - name: Generate kustomize patches for tenant manifests
+    block:
+    - name: Create configuration directory for tenant
+      ansible.builtin.file:
+        path: tenants/{{ konflux_tenant_workspace_name }}
+        state: directory
+      vars:
+        konflux_tenant_workspace_name: "{{ item.tenant_name }}"
+      loop: "{{ tenants_list | list }}"
+      loop_control:
+        label: "{{ item.tenant_name }}"
+
+    - name: Generate kustomize configuration for tenant
+      ansible.builtin.template:
+        src: templates/kustomize-konflux-tenants.yaml.j2
+        dest: tenants/{{ konflux_tenant_workspace_name }}/kustomization.yaml
+      vars:
+        konflux_tenant_workspace_name: "{{ item.tenant_name }}"
+      loop: "{{ tenants_list | list }}"
+      loop_control:
+        label: "{{ item.tenant_name }}"

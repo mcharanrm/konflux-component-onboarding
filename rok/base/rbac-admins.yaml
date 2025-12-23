@@ -1,0 +1,23 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  creationTimestamp: null
+  name: perf-rhtap-tenant-konflux-admins
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: konflux-admin-user-actions
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: cmusali
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: jhutar
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: smodak
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: maniskum

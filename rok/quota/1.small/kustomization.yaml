@@ -1,0 +1,7 @@
+---
+kind: Kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+resources:
+  - ../0.base
+commonAnnotations:
+  konflux-ci.dev/tier: small
