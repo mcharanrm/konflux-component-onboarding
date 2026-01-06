@@ -1,0 +1,44 @@
+---
+- name: get details of the repository
+  ansible.builtin.uri:
+    url: "{{ gh_api.base_url + gh_api.get_repository.path }}/{{ kflux_data.git_repo_name }}"
+    method: "{{ gh_api.get_repository.method }}"
+    headers:
+      accept: application/vnd.github+json
+      Authorization: "Bearer {{ gh_pat.create_repositories }}"
+    status_code: "{{ gh_api.get_repository.expected_status }}"
+  register: get_repository_response
+  ignore_errors: true
+  until: (get_repository_response.status | int) == (gh_api.get_repository.expected_status | int)
+  delay: "{{ gh_api.delay_seconds | int  }}"
+  retries: "{{ gh_api.retries | int }}"
+
+- name: remove repository from Konflux GitHub app installation
+  ansible.builtin.uri:
+    url: "{{ gh_api.base_url + gh_api.kflux_gh_app.installation.path }}/{{ get_repository_response.json.id }}"
+    method: "{{ gh_api.kflux_gh_app.remove.method }}"
+    headers:
+      accept: application/vnd.github+json
+      Authorization: "Bearer {{ gh_pat.create_repositories }}"
+    status_code: "{{ gh_api.kflux_gh_app.remove.expected_status }}"
+  register: remove_repo_from_kflux_app_response
+  ignore_errors: true
+  until: (remove_repo_from_kflux_app_response.status | int) == (gh_api.kflux_gh_app.remove.expected_status | int)
+  delay: "{{ gh_api.delay_seconds | int  }}"
+  retries: "{{ gh_api.retries | int }}"
+
+- name: delete the GitHub repository
+  ansible.builtin.uri:
+    url: "{{ gh_api.base_url }}{{ gh_api.delete_repository.path }}/{{ kflux_data.git_repo_name }}"
+    method: "{{ gh_api.delete_repository.method }}"
+    headers:
+      accept: application/vnd.github+json
+      Authorization: "Bearer {{ gh_pat.delete_repositories }}"
+    status_code: "{{ gh_api.delete_repository.expected_status }}"
+  register: delete_repo_response
+  ignore_errors: true
+  until: (delete_repo_response.status | int) == (gh_api.delete_repository.expected_status | int)
+  delay: "{{ gh_api.delay_seconds | int  }}"
+  retries: "{{ gh_api.retries | int }}"
+
+

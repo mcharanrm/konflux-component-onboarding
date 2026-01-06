@@ -1,0 +1,31 @@
+---
+- name: validate name prefixes and test scenario
+  ansible.builtin.assert:
+    that: 
+      - test_scenario == 'rok' or test_scenario == 'fkx'
+      - repository_name_prefix | regex_search('^[a-z][a-z-]*-$')
+      - application_name_prefix | regex_search('^[a-z][a-z-]*-$')
+      - component_name_prefix | regex_search('^[a-z][a-z-]*-$')
+    success_msg: 
+      - All assertions passed. 
+      - All the variables/values for test_scenario and name_prefixes are correctly defined and matches the required pattern
+
+
+- name: validate ROK tenant namespace prefixes and suffixes
+  ansible.builtin.assert:
+    that:
+      - rok_tenant_namespace_prefix | regex_search('^[a-z][a-z-]*-$')
+      - rok_tenant_namespace_suffix | regex_search('^-[a-z]+$')
+    success_msg: 
+      - All assertions passed
+      - rok(RHEL on Konflux) test scenario is selected. Tenant namespace prefix and suffix is defined correctly
+  when: test_scenario == 'rok'
+
+- name: validate FKX tenant namespace
+  ansible.builtin.assert:
+    that:
+      - fedora_tenant_namespace | regex_search('^[a-z][a-z-]*-tenant$')
+    success_msg:
+      - All assertions passed
+      - fkx(Fedora on Konflux) test scenario is selected and the tenant namespace is defined correctly
+  when: test_scenario == 'fkx'

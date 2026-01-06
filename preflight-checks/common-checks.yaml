@@ -1,0 +1,12 @@
+- name: check input numerical range variables
+  ansible.builtin.assert:
+    that:
+      # Type casting a null, empty string, or string to int always transform to 0.
+      # This creates a limitation: 0 cannot be used in the range.
+      # A regex fileter is added to make sure that only integers are present.
+      # The expression can be simplified further - (starts_from | int >= 0) and (starts_from | regex_search('^[0-9]+$'))
+      - starts_from | regex_search('^[0-9]+$')
+      - ends_at | regex_search('^[0-9]+$')
+      - (ends_at | int) >= (starts_from | int)
+    fail_msg: "either the variable is empty or contains non-numerical characters"
+    success_msg: "variables $starts_from and $ends_at are correctly defined and the range is acceptable"

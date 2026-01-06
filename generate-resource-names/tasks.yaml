@@ -1,0 +1,60 @@
+---
+- name: generate GitHub repository name list
+  ansible.builtin.set_fact:
+    github_repository_names: "{% set tmp_repo_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{{ tmp_repo_names.append({'key': 'git_repo_name', 'value': repository_name_prefix + (item | string)}) }}{% endfor %}{{ tmp_repo_names }}"
+
+- name: generate Konflux application name lists
+  ansible.builtin.set_fact:
+    konflux_application_names: "{% set tmp_app_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{{ tmp_app_names.append({'key': 'knflux_app_name', 'value': application_name_prefix + (item | string)}) }}{% endfor %}{{ tmp_app_names }}"
+    
+- name: generate Konflux component name lists
+  ansible.builtin.set_fact:
+    konflux_component_names: "{% set tmp_comp_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{{ tmp_comp_names.append({'key': 'knflux_comp_name', 'value': component_name_prefix + (item | string)}) }}{% endfor %}{{ tmp_comp_names }}"
+
+- name: generate tenant names for rok scenario
+  ansible.builtin.set_fact:
+    konflux_tenant_names: "{% set tmp_rok_tenants = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{{ tmp_rok_tenants.append({'key': 'knflux_tenant_name', 'value': rok_tenant_namespace_prefix + (item | string) + rok_tenant_namespace_suffix }) }}{% endfor %}{{ tmp_rok_tenants }}"
+  when: test_scenario == 'rok'
+
+- name: generate tenant names for fkx scenario
+  ansible.builtin.set_fact:
+    konflux_tenant_names: "{% set tmp_fkx_tenants = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{{ tmp_fkx_tenants.append({'key': 'knflux_tenant_name', 'value': fedora_tenant_namespace }) }}{% endfor %}{{ tmp_fkx_tenants }}"
+  when: test_scenario == 'fkx'
+
+- name: zip Konflux applications, components, tenant namespaces and GitHub repositories
+  ansible.builtin.set_fact:
+    konflux_zipped_data: "{{ konflux_application_names | zip(github_repository_names, konflux_component_names, konflux_tenant_names) }}"
+
+- name: convert zipped Konflux app/component/repo data to list of dictionaries
+  ansible.builtin.set_fact:
+    konflux_mapped_data: "{% set tmp_map_values=[] %}{% for item in konflux_zipped_data %}{{ tmp_map_values.append(item | items2dict) }}{% endfor %}{{ tmp_map_values }}"
+
+- name: debug generated name list
+  ansible.builtin.debug:
+    msg: 
+    - "github_repository_names  : {{ github_repository_names }}"
+    - "konflux_application_names: {{ konflux_application_names}}"
+    - "konflux_component_names  : {{ konflux_component_names }}"
+    - "konflux_tenant_names     : {{ konflux_tenant_names }}"
+    verbosity: 1
+
+- name: debug konflux mapped data
+  ansible.builtin.debug:
+    var: konflux_mapped_data
+    verbosity: 1
+
+- name: calculate total range
+  ansible.builtin.set_fact:
+    total_items_count: "{{ (ends_at|int - starts_from|int) + 1 }}"
+
+- name: verify length of the generated name list
+  ansible.builtin.assert:
+    that:
+      - github_repository_names | length == total_items_count | int
+      - konflux_application_names | length == total_items_count | int
+      - konflux_component_names | length == total_items_count | int
+      - konflux_tenant_names | length == total_items_count | int
+      - konflux_mapped_data | length == total_items_count | int
+    success_msg: 
+      - "All assertions passed"
+      - "Total items in the generated name list matches the total range ({{ total_items_count }}) defined"

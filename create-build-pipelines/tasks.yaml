@@ -1,0 +1,82 @@
+---
+- name: extract repository name from rpm package source
+  ansible.builtin.set_fact:
+    rpm_pkg_name: "{{ distgit_rpm_package_source | basename | split('.') | first }}"
+
+- name: verify distgit_rpm_package_source already exists for creating build pipelines
+  ansible.builtin.stat:
+    path: ../{{ git_workspace_dir }}/{{ rpm_pkg_name }}
+  register: rpm_pkg_status
+
+- name: clone dist-git rpm package repository
+  ansible.builtin.git:
+    repo: "{{ distgit_rpm_package_source }}"
+    dest: "../{{ git_workspace_dir }}/{{ rpm_pkg_name }}"
+    single_branch: yes
+    version: master
+  when: rpm_pkg_status.stat.exists == false
+
+- name: get details about the remote repository
+  ansible.builtin.uri:
+    url: "{{ gh_api.base_url +  gh_api.get_repository.path }}/{{ kflux_data.git_repo_name }}"
+    method: "{{ gh_api.get_repository.method }}"
+    headers:
+      accept: application/vnd.github+json
+      Authorization: "Bearer {{ gh_pat.create_repositories }}"
+    status_code: "{{ gh_api.get_repository.expected_status | int }}"
+  ignore_errors: true
+  retries: "{{ gh_api.retries }}"
+  delay: "{{ gh_api.delay_seconds }}"                                    
+  until: (get_repository_response.status | int) == (gh_api.get_repository.expected_status | int)
+  register: get_repository_response
+
+- name: execute remaining git operations via shell
+  ansible.builtin.shell: |
+    # Now that the repository is cloned, we can move to the remaining steps
+    cd ../{{ git_workspace_dir }}/{{ rpm_pkg_name }}
+
+    # Track the remote repositories and commit the changes
+    git remote add {{ kflux_data.knflux_comp_name }} {{ get_repository_response.json.clone_url }}
+    git push -u {{ kflux_data.knflux_comp_name }} master
+  register: git_cmds_shell_output
+
+# With the initial changes pushed, template the files and push to a new branch
+- name: Create .tekton directory for pipeline files
+  ansible.builtin.file:
+    path: "../{{ git_workspace_dir }}/{{ rpm_pkg_name }}/.tekton"
+    state: directory
+
+- name: render build pipeline templates
+  ansible.builtin.template:
+    src: ../create-build-pipelines/templates/build-rpm-package-pipeline.yaml.j2
+    dest: "../{{ git_workspace_dir }}/{{ rpm_pkg_name }}/.tekton/{{ kflux_data.knflux_comp_name }}-pull-request.yaml"
+
+- name: create feature branch and commit changes
+  ansible.builtin.shell: |
+    cd ../{{ git_workspace_dir }}/{{ rpm_pkg_name }}
+    git branch -D konflux-{{ kflux_data.knflux_comp_name }} || echo 
+    git push {{ kflux_data.knflux_comp_name }} --delete konflux-{{ kflux_data.knflux_comp_name }} || echo
+    git checkout -b konflux-{{ kflux_data.knflux_comp_name }}
+    git add .tekton/ ;git commit -m "Add tekton build pipelines";git checkout master
+    git push -u  {{ kflux_data.knflux_comp_name }} konflux-{{ kflux_data.knflux_comp_name }}
+
+- name: open GitHub pull request
+  ansible.builtin.uri:
+    url: "{{ gh_api.base_url }}{{ gh_api.create_pull_request.path }}/{{ kflux_data.git_repo_name }}/pulls"
+    method: "{{ gh_api.create_pull_request.method }}"
+    headers:
+      accept: application/vnd.github+json
+      Authorization: "Bearer {{ gh_pat.create_repositories }}"
+    body_format: json
+    body: >
+      {
+        "head": "konflux-{{ kflux_data.knflux_comp_name }}",
+        "base": "master",
+        "title": "Add Tekton rpm build pipelines for {{ kflux_data.knflux_comp_name }}"
+      }
+    status_code: "{{ gh_api.create_pull_request.expected_status | int }}"
+  ignore_errors: true
+  retries: "{{ gh_api.retries }}"
+  delay: "{{ gh_api.delay_seconds }}"                                    
+  until: (create_pull_request_response.status | int) == (gh_api.create_pull_request.expected_status | int)
+  register: create_pull_request_response

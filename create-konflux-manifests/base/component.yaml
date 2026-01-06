@@ -1,0 +1,19 @@
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  name: comp
+  namespace: konflux-tenant
+  annotations:
+    build.appstudio.openshift.io/request: configure-pac-no-mr
+    build.appstudio.openshift.io/pipeline: '{"name":"docker-build-oci-ta","bundle":"latest"}'
+    image.redhat.com/generate: '{"visibility": "public"}'
+spec:
+  application: app
+  componentName: comp
+  source:
+    git:
+      dockerfileUrl: Dockerfile.scratch
+      url: https://github.com/mcharanrm/konflux-component-scaling-work.git
+      revision: master
+

@@ -1,0 +1,33 @@
+- name: create the GitHub repository
+  ansible.builtin.uri:
+    url: "{{ gh_api.base_url }}{{ gh_api.create_repository.path }}"
+    method: "{{ gh_api.create_repository.method }}"
+    headers:
+      accept: application/vnd.github+json
+      Authorization: "Bearer {{ gh_pat.create_repositories }}"
+    body_format: json
+    body: >
+      {
+        "name": "{{ kflux_data.git_repo_name }}",
+        "description": "This repository is created as part of the perf&scale work. This is integrated with Konflux component - {{ kflux_data.knflux_comp_name }} and it is deployed on {{ kflux_data.knflux_tenant_name }}"
+      }
+    status_code: "{{ gh_api.create_repository.expected_status | int }}"
+  ignore_errors: true
+  retries: "{{ gh_api.retries }}"
+  delay: "{{ gh_api.delay_seconds }}"                                    
+  until: (create_repository_response.status | int) == (gh_api.create_repository.expected_status | int)
+  register: create_repository_response
+
+- name: Register Repository with GitHub App Installation
+  ansible.builtin.uri:
+    url: "{{ gh_api.base_url}}{{ gh_api.kflux_gh_app.installation.path }}/{{ create_repository_response.json.id }}"
+    method: "{{ gh_api.kflux_gh_app.add.method }}"
+    headers:
+      accept: application/vnd.github+json
+      Authorization: "Bearer {{ gh_pat.create_repositories }}"
+    status_code: "{{ gh_api.kflux_gh_app.add.expected_status }}"
+  ignore_errors: true
+  retries: "{{ gh_api.retries }}"
+  delay: "{{ gh_api.delay_seconds }}"                                    
+  until: (app_install_status.status | int) == (gh_api.kflux_gh_app.add.expected_status | int)
+  register: app_install_status
