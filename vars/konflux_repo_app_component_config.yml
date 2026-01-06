@@ -1,34 +1,52 @@
 ---
+# Integer; Required; Used as a starting point/number in the range
+starts_from:
+
+# Integer; Required; Used as a ending point/number in the range
+ends_at:
+
 # Prefix used when generating GitHub repository names
-repository_name_prefix: "fedora-on-konflux-perf-scale-repo-"
+repository_name_prefix: "test-rhtap-tenant-repo-"
 
 # Prefix used when generating Konflux application names
-application_name_prefix: "fedora-on-konflux-perf-scale-application-"
+application_name_prefix: "test-rhtap-tenant-app-"
 
 # Prefix used when generating Konflux component names
-component_name_prefix: "fedora-on-konflux-perf-scale-component-"
+component_name_prefix: "test-rhtap-tenant-comp-"
 
-# Absolute path to the Konflux tenant workspace directory
-konflux_tenant_workspace_path: "/home/cmusali/konflux/tenants-config/cluster/kfluxfedorap01/konflux-fedora-perfscale-tenant"
+# Test scenarios [rok - RHEL on Konflux and Fedora on Konflux | fkx - Fedora on Konflux]
+test_scenario:
 
-# Directory name used as the base layer for Kustomize configurations
-kustomize_base_dir: "fedora-base"
+# fkx tenant workspace
+fedora_tenant_namespace: 'konflux-fedora-perfscale-tenant'
 
-# Directory containing overlay/patch files for Kustomize
-kustomize_overlay_dir: "fedora-patches"
+# rok tenant workspace(s) prefix
+rok_tenant_namespace_prefix: 'test-rhtap-'
+
+# rok tenant workspace(s) suffic
+rok_tenant_namespace_suffix: '-tenant'
 
 # Run RPM build with multiple architectures
 build_multi_arch: false
 
 # RPM package source in GitHub
-package_source: "git@github.com:mcharanrm/example-fedora-konflux-libecpg-perf-fork.git"
+distgit_rpm_package_source: "git@github.com:mcharanrm/example-fedora-konflux-libecpg-perf-fork.git"
 
 # Temporary workspace/directory for generating build pipelines, committing it and creating pull requests
-git_workspace_dir: "/tmp"
+git_workspace_dir: "build-pipelines-workspace"
+
+# Path to read GitHub PATs
+github_pat_file: "{{ ansible_facts['user_dir'] + '/.github-pat.json' }}"
 
 # Configuration for interacting with the GitHub API
 github_api:
   base_url: "https://api.github.com"
+  # Endpoint for accessing GitHub repositories
+  get_repository:
+    path: /repos/mcharanrm
+    method: GET
+    expected_status: 200
+
   # Endpoint for creating GitHub repositories
   create_repository:
     path: "/user/repos"
@@ -41,11 +59,26 @@ github_api:
     method: "DELETE"
     expected_status: 204
 
-  # Endpoint for adding a repository to a GitHub App installation
-  register_repository:
-    path: "/user/installations/89145558/repositories"
-    method: "PUT"
-    expected_status: 204
+  # Endpoint for adding/removing a repository to a GitHub App installation
+  kflux_gh_app:
+    installation:
+      path:  "/user/installations/88047488/repositories"
+      quay_org: "redhat-user-workloads-stage"
+    add:
+      method: "PUT"
+      expected_status: 204
+    remove:
+      method: "PUT"
+      expected_status: 204
+    # konflux_staging:
+    #   path: "/user/installations/88047488/repositories"
+    #   quay_org: "redhat-user-workloads-stage"
+    # konflux_fedora:
+    #   path:  "/user/installations/89145558/repositories"
+    #   quay_org: "konflux-fedora"
+    # redhat_konflux:
+    #   path: "/user/installations/88048036/repositories"
+    #   quay_org: "redhat-user-workloads"
 
   # Endpoint for creating GitHub Pull Requests
   create_pull_request:
