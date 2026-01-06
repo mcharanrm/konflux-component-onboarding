@@ -1,0 +1,31 @@
+---
+- name: create GitHub repositories
+  hosts: localhost
+  gather_subset: 
+    - '!all'
+    - '!min'
+    - 'user_dir'
+  vars_files:
+    - ../vars/konflux_repo_app_component_config.yml
+  tasks:
+    # run pre-flight checks that are common
+    - ansible.builtin.include_tasks:
+        file: ../preflight-checks/common-checks.yaml
+    
+    - block:
+      # run pre-flight checks specific to generate names
+      - ansible.builtin.include_tasks:
+          file: ../preflight-checks/name-generation-checks.yaml
+
+      # run tasks to generate names
+      - ansible.builtin.include_tasks:
+          file: ../generate-resource-names/tasks.yaml
+    
+    # run the tasks required to create repositories and install Konflux GitHub app to the repositories
+    - ansible.builtin.include_tasks:
+        file: ../create-konflux-manifests/tasks.yaml
+      vars:
+        kflux_data: "{{ item }}"
+      loop: "{{ konflux_mapped_data }}"
+      loop_control:
+        label: "{{ item.git_repo_name }}"

@@ -1,0 +1,10 @@
+---
+- name: check whether github_pat_file exists 
+  ansible.builtin.stat:
+    path: "{{ github_pat_file }}"
+  register: pat_file_status
+
+- name: read the contents from the file access PATs
+  ansible.builtin.set_fact:
+    github_pat: "{{ lookup('file', github_pat_file) | from_json }}"
+  when: pat_file_status.stat.exists

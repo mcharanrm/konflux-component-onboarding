@@ -12,11 +12,11 @@ metadata:
     pipelinesascode.tekton.dev/on-cel-expression: event == "pull_request" && target_branch == "master"
   creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: "{{ konflux_app_repo_mappings_data.knflux_app_name }}"
-    appstudio.openshift.io/component: "{{ konflux_app_repo_mappings_data.knflux_comp_name }}"
+    appstudio.openshift.io/application: "{{ kflux_data.knflux_app_name }}"
+    appstudio.openshift.io/component: "{{ kflux_data.knflux_comp_name }}"
     pipelines.appstudio.openshift.io/type: build
-  name: "{{ konflux_app_repo_mappings_data.knflux_comp_name }}-on-pull-request"
-  namespace: "{{ konflux_tenant_namespace }}"
+  name: "{{ kflux_data.knflux_comp_name }}-on-pull-request"
+  namespace: "{{ kflux_data.knflux_tenant_name }}"
 spec:
   params:
     - name: package-name
@@ -32,7 +32,7 @@ spec:
       value: [ x86_64 ]
     {% endif -%}
     - name: ociStorage
-      value: quay.io/konflux-fedora/{{ konflux_tenant_namespace }}/{{ konflux_app_repo_mappings_data.knflux_comp_name }}:on-pr-{{'{{revision}}'}}
+      value: quay.io/{{ gh_api.kflux_gh_app.installation.quay_org }}/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_comp_name }}:on-pr-{{'{{revision}}'}}
   pipelineRef:
     resolver: git
     params:
@@ -47,4 +47,4 @@ spec:
       secret:
         secretName: {{"'{{ git_auth_secret }}'"}}
   taskRunTemplate:
-    serviceAccountName: build-pipeline-{{ konflux_app_repo_mappings_data.knflux_comp_name }}
+    serviceAccountName: build-pipeline-{{ kflux_data.knflux_comp_name }}

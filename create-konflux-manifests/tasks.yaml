@@ -1,0 +1,49 @@
+- name: create application overlay directory for tenant
+  ansible.builtin.file:
+    path: "../{{ test_scenario }}/tenants/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_app_name }}"
+    state: directory
+
+- name: render kustomization.yaml for Konflux application overlay
+  ansible.builtin.template:
+    src: ../create-konflux-manifests/patches/konflux-component-kustomization.yaml.j2
+    dest: "../{{ test_scenario }}/tenants/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_app_name }}/kustomization.yaml"
+
+- name: Remove existing perf-scale ReleasePlan manifest (ROK only)
+  ansible.builtin.file:
+    path: "../{{ test_scenario }}/tenants/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_app_name }}/konflux-perf-scale-release-plan.yaml"
+    state: absent
+  when: test_scenario == 'rok'
+
+- name: generate ReleasePlanList manifest (ROK only)
+  ansible.builtin.lineinfile:
+    path: "../{{ test_scenario }}/tenants/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_app_name }}/konflux-perf-scale-release-plan.yaml"
+    line: |
+      ---
+      apiVersion: appstudio.redhat.com/v1alpha1
+      kind: ReleasePlanList
+      items:
+      {% for plan_number in range(1, 11) %}
+      - apiVersion: appstudio.redhat.com/v1alpha1
+        kind: ReleasePlan
+        metadata:
+          name: konflux-perf-scale-release-plan-{{ plan_number }}
+          namespace: "{{ kflux_data.knflux_tenant_name }}"
+          labels:
+            release.appstudio.openshift.io/auto-release: 'false' 
+            release.appstudio.openshift.io/standing-attribution: 'true'
+        spec: 
+          application: "{{ kflux_data.knflux_app_name }}"
+          target: managed-release-team-tenant
+      {% endfor %}
+    create: true
+    state: present
+    insertafter: EOF
+  when: test_scenario == 'rok'
+
+- name: register ReleasePlan manifest in kustomization
+  ansible.builtin.lineinfile: 
+    path: "../{{ test_scenario }}/tenants/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_app_name }}/kustomization.yaml"
+    line: "{% filter indent(width=2, first=true) %}- konflux-perf-scale-release-plan.yaml{% endfilter %}"
+    insertafter: EOF
+    state: present
+  when: test_scenario == 'rok'

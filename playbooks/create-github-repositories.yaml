@@ -1,0 +1,51 @@
+---
+- name: create GitHub repositories
+  hosts: localhost
+  gather_subset: 
+    - '!all'
+    - '!min'
+    - 'user_dir'
+  vars_files:
+    - ../vars/konflux_repo_app_component_config.yml
+  tasks:
+    # run pre-flight checks that are common
+    - ansible.builtin.include_tasks:
+        file: ../preflight-checks/common-checks.yaml
+
+    # There are two separate tokens: one for creating repositories
+    # and another for deleting repositories. Since these are different
+    # tokens, a common task is not needed.
+    - block:
+        - name: check whether github_pat_file exists
+          ansible.builtin.include_tasks:
+            file: ../preflight-checks/access-github-pat-file-checks.yaml
+
+        - name: access the content and verify whether PAT exists
+          ansible.builtin.assert:
+            that:
+              - pat_file_status.stat.exists == true
+              - github_pat.create_repositories | regex_search('ghp_.+')
+            success_msg:
+              - All assertions passed. 
+              - File {{ github_pat_file }} exists and the PAT exists to access to GitHub API endpoint and create repositories
+    
+    - block:
+      # run pre-flight checks specific to generate names
+      - ansible.builtin.include_tasks:
+          file: ../preflight-checks/name-generation-checks.yaml
+    
+      # run tasks to generate names
+      - ansible.builtin.include_tasks:
+          file: ../generate-resource-names/tasks.yaml
+    
+    # run the tasks required to create repositories and install Konflux GitHub app to the repositories
+    - ansible.builtin.include_tasks:
+        file: ../create-repositories/tasks.yaml
+      vars:
+        gh_api: "{{ github_api }}"
+        gh_pat: "{{ github_pat }}"
+        kflux_data: "{{ item }}"
+      loop: "{{ konflux_mapped_data }}"
+      loop_control:
+        label: "{{ item.git_repo_name }}"
+      
