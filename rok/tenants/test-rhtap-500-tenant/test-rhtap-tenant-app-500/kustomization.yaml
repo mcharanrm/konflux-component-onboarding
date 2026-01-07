@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+patches:
+  # JSON patch
+  - target:
+      kind: Application 
+      name: app
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: test-rhtap-tenant-app-500 
+      - op: replace
+        path: /metadata/namespace
+        value: test-rhtap-500-tenant
+      - op: replace 
+        path: /spec/displayName
+        value: test-rhtap-tenant-app-500
+  - target:
+      kind: Component
+      name: comp
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: test-rhtap-tenant-comp-500      
+      - op: replace
+        path: /metadata/namespace
+        value: test-rhtap-500-tenant
+      - op: replace
+        path: /spec/application
+        value: test-rhtap-tenant-app-500
+      - op: replace
+        path: /spec/componentName
+        value: test-rhtap-tenant-comp-500
+      - op: replace
+        path: /spec/source/git/url
+        value: https://github.com/mcharanrm/test-rhtap-tenant-repo-500.git
+
+resources:
+  - ../../../../create-konflux-manifests/base
+  - konflux-perf-scale-release-plan.yaml
