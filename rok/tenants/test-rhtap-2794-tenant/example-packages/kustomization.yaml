@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+patches:
+  # JSON patch
+  - target:
+      kind: Application 
+      name: app
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: example-packages 
+      - op: replace
+        path: /metadata/namespace
+        value: test-rhtap-2794-tenant
+      - op: replace 
+        path: /spec/displayName
+        value: example-packages
+  - target:
+      kind: Component
+      name: comp
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: example-rok-libecpg      
+      - op: replace
+        path: /metadata/namespace
+        value: test-rhtap-2794-tenant
+      - op: replace
+        path: /spec/application
+        value: example-packages
+      - op: replace
+        path: /spec/componentName
+        value: example-rok-libecpg
+      - op: replace
+        path: /spec/source/git/url
+        value: https://github.com/mcharanrm/example-rok-libecpg-2794.git
+
+resources:
+  - ../../../../create-konflux-manifests/base
+  - konflux-perf-scale-release-plan.yaml

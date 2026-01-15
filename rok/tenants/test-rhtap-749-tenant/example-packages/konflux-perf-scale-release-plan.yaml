@@ -1,0 +1,115 @@
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: ReleasePlanList
+items:
+- apiVersion: appstudio.redhat.com/v1alpha1
+  kind: ReleasePlan
+  metadata:
+    name: konflux-perf-scale-release-plan-1
+    namespace: "test-rhtap-749-tenant"
+    labels:
+      release.appstudio.openshift.io/auto-release: 'false' 
+      release.appstudio.openshift.io/standing-attribution: 'true'
+  spec: 
+    application: "example-packages"
+    target: managed-release-team-tenant
+- apiVersion: appstudio.redhat.com/v1alpha1
+  kind: ReleasePlan
+  metadata:
+    name: konflux-perf-scale-release-plan-2
+    namespace: "test-rhtap-749-tenant"
+    labels:
+      release.appstudio.openshift.io/auto-release: 'false' 
+      release.appstudio.openshift.io/standing-attribution: 'true'
+  spec: 
+    application: "example-packages"
+    target: managed-release-team-tenant
+- apiVersion: appstudio.redhat.com/v1alpha1
+  kind: ReleasePlan
+  metadata:
+    name: konflux-perf-scale-release-plan-3
+    namespace: "test-rhtap-749-tenant"
+    labels:
+      release.appstudio.openshift.io/auto-release: 'false' 
+      release.appstudio.openshift.io/standing-attribution: 'true'
+  spec: 
+    application: "example-packages"
+    target: managed-release-team-tenant
+- apiVersion: appstudio.redhat.com/v1alpha1
+  kind: ReleasePlan
+  metadata:
+    name: konflux-perf-scale-release-plan-4
+    namespace: "test-rhtap-749-tenant"
+    labels:
+      release.appstudio.openshift.io/auto-release: 'false' 
+      release.appstudio.openshift.io/standing-attribution: 'true'
+  spec: 
+    application: "example-packages"
+    target: managed-release-team-tenant
+- apiVersion: appstudio.redhat.com/v1alpha1
+  kind: ReleasePlan
+  metadata:
+    name: konflux-perf-scale-release-plan-5
+    namespace: "test-rhtap-749-tenant"
+    labels:
+      release.appstudio.openshift.io/auto-release: 'false' 
+      release.appstudio.openshift.io/standing-attribution: 'true'
+  spec: 
+    application: "example-packages"
+    target: managed-release-team-tenant
+- apiVersion: appstudio.redhat.com/v1alpha1
+  kind: ReleasePlan
+  metadata:
+    name: konflux-perf-scale-release-plan-6
+    namespace: "test-rhtap-749-tenant"
+    labels:
+      release.appstudio.openshift.io/auto-release: 'false' 
+      release.appstudio.openshift.io/standing-attribution: 'true'
+  spec: 
+    application: "example-packages"
+    target: managed-release-team-tenant
+- apiVersion: appstudio.redhat.com/v1alpha1
+  kind: ReleasePlan
+  metadata:
+    name: konflux-perf-scale-release-plan-7
+    namespace: "test-rhtap-749-tenant"
+    labels:
+      release.appstudio.openshift.io/auto-release: 'false' 
+      release.appstudio.openshift.io/standing-attribution: 'true'
+  spec: 
+    application: "example-packages"
+    target: managed-release-team-tenant
+- apiVersion: appstudio.redhat.com/v1alpha1
+  kind: ReleasePlan
+  metadata:
+    name: konflux-perf-scale-release-plan-8
+    namespace: "test-rhtap-749-tenant"
+    labels:
+      release.appstudio.openshift.io/auto-release: 'false' 
+      release.appstudio.openshift.io/standing-attribution: 'true'
+  spec: 
+    application: "example-packages"
+    target: managed-release-team-tenant
+- apiVersion: appstudio.redhat.com/v1alpha1
+  kind: ReleasePlan
+  metadata:
+    name: konflux-perf-scale-release-plan-9
+    namespace: "test-rhtap-749-tenant"
+    labels:
+      release.appstudio.openshift.io/auto-release: 'false' 
+      release.appstudio.openshift.io/standing-attribution: 'true'
+  spec: 
+    application: "example-packages"
+    target: managed-release-team-tenant
+- apiVersion: appstudio.redhat.com/v1alpha1
+  kind: ReleasePlan
+  metadata:
+    name: konflux-perf-scale-release-plan-10
+    namespace: "test-rhtap-749-tenant"
+    labels:
+      release.appstudio.openshift.io/auto-release: 'false' 
+      release.appstudio.openshift.io/standing-attribution: 'true'
+  spec: 
+    application: "example-packages"
+    target: managed-release-team-tenant
+
