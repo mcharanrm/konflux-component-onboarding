@@ -1,3 +1,7 @@
+- name: show the current iteration of the loop at the beginning
+  ansible.builtin.debug:
+    msg: "start creating manifests for tenant - {{ kflux_data.knflux_tenant_name }} and component - {{ kflux_data.knflux_comp_name }}"
+
 - name: create application overlay directory for tenant
   ansible.builtin.file:
     path: "../{{ test_scenario }}/tenants/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_app_name }}"
@@ -8,7 +12,7 @@
     src: ../create-konflux-manifests/patches/konflux-component-kustomization.yaml.j2
     dest: "../{{ test_scenario }}/tenants/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_app_name }}/kustomization.yaml"
 
-- name: Remove existing perf-scale ReleasePlan manifest (ROK only)
+- name: remove existing perf-scale ReleasePlan manifest (ROK only)
   ansible.builtin.file:
     path: "../{{ test_scenario }}/tenants/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_app_name }}/konflux-perf-scale-release-plan.yaml"
     state: absent
@@ -47,3 +51,7 @@
     insertafter: EOF
     state: present
   when: test_scenario == 'rok'
+
+- name: show the iteration of the loop at the end
+  ansible.builtin.debug:
+    msg: "successfully created manifests for tenant - {{ kflux_data.knflux_tenant_name }} and component - {{ kflux_data.knflux_comp_name }}"

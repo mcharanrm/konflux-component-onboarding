@@ -1,3 +1,7 @@
+- name: show the current iteration of the loop at the beginning
+  ansible.builtin.debug:
+    msg: "start creating github repository for {{ kflux_data.git_repo_name }}"
+
 - name: create the GitHub repository
   ansible.builtin.uri:
     url: "{{ gh_api.base_url }}{{ gh_api.create_repository.path }}"
@@ -31,3 +35,7 @@
   delay: "{{ gh_api.delay_seconds }}"                                    
   until: (app_install_status.status | int) == (gh_api.kflux_gh_app.add.expected_status | int)
   register: app_install_status
+
+- name: show the iteration of the loop at the end
+  ansible.builtin.debug:
+    msg: "successfully created github repository for {{ kflux_data.git_repo_name }}"

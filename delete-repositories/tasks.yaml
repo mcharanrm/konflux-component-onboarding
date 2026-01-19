@@ -1,4 +1,8 @@
 ---
+- name: show the current iteration of the loop at the beginning
+  ansible.builtin.debug:
+    msg: "start deleting github repository for {{ kflux_data.git_repo_name }}"
+
 - name: get details of the repository
   ansible.builtin.uri:
     url: "{{ gh_api.base_url + gh_api.get_repository.path }}/{{ kflux_data.git_repo_name }}"
@@ -40,5 +44,9 @@
   until: (delete_repo_response.status | int) == (gh_api.delete_repository.expected_status | int)
   delay: "{{ gh_api.delay_seconds | int  }}"
   retries: "{{ gh_api.retries | int }}"
+
+- name: show the iteration of the loop at the end
+  ansible.builtin.debug:
+    msg: "successfully deleted github repository for {{ kflux_data.git_repo_name }}"
 
 
