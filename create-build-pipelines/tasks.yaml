@@ -1,4 +1,8 @@
 ---
+- name: show the current iteration of the loop at the beginning
+  ansible.builtin.debug:
+    msg: "start creating build pipelines for {{ kflux_data.git_repo_name }}"
+
 - name: extract repository name from rpm package source
   ansible.builtin.set_fact:
     rpm_pkg_name: "{{ distgit_rpm_package_source | basename | split('.') | first }}"
@@ -80,3 +84,7 @@
   delay: "{{ gh_api.delay_seconds }}"                                    
   until: (create_pull_request_response.status | int) == (gh_api.create_pull_request.expected_status | int)
   register: create_pull_request_response
+
+- name: show the iteration of the loop at the end
+  ansible.builtin.debug:
+    msg: "successfully created build pipelines for {{ kflux_data.git_repo_name }}"
