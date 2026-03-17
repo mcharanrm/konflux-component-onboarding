@@ -34,14 +34,20 @@
   until: (get_repository_response.status | int) == (gh_api.get_repository.expected_status | int)
   register: get_repository_response
 
+- name: Debug repository response
+  debug:
+    var: get_repository_response
+    verbosity: 1
+
 - name: execute remaining git operations via shell
   ansible.builtin.shell: |
     # Now that the repository is cloned, we can move to the remaining steps
     cd ../{{ git_workspace_dir }}/{{ rpm_pkg_name }}
 
     # Track the remote repositories and commit the changes
-    git remote add {{ kflux_data.knflux_comp_name }} {{ get_repository_response.json.clone_url }}
-    git push -u {{ kflux_data.knflux_comp_name }} master
+    git remote remove {{ kflux_data.git_repo_name }} 
+    git remote add {{ kflux_data.git_repo_name }} {{ get_repository_response.json.ssh_url }}
+    git push -u {{ kflux_data.git_repo_name }} master
   register: git_cmds_shell_output
 
 # With the initial changes pushed, template the files and push to a new branch
@@ -53,16 +59,16 @@
 - name: render build pipeline templates
   ansible.builtin.template:
     src: ../create-build-pipelines/templates/build-rpm-package-pipeline.yaml.j2
-    dest: "../{{ git_workspace_dir }}/{{ rpm_pkg_name }}/.tekton/{{ kflux_data.knflux_comp_name }}-pull-request.yaml"
+    dest: "../{{ git_workspace_dir }}/{{ rpm_pkg_name }}/.tekton/{{ kflux_data.git_repo_name }}-pull-request.yaml"
 
 - name: create feature branch and commit changes
   ansible.builtin.shell: |
     cd ../{{ git_workspace_dir }}/{{ rpm_pkg_name }}
-    git branch -D konflux-{{ kflux_data.knflux_comp_name }} || echo 
-    git push {{ kflux_data.knflux_comp_name }} --delete konflux-{{ kflux_data.knflux_comp_name }} || echo
-    git checkout -b konflux-{{ kflux_data.knflux_comp_name }}
+    git branch -D konflux-{{ kflux_data.git_repo_name }} || echo 
+    git push {{ kflux_data.git_repo_name }} --delete konflux-{{ kflux_data.git_repo_name }} || echo
+    git checkout -b konflux-{{ kflux_data.git_repo_name }}
     git add .tekton/ ;git commit -m "Add tekton build pipelines";git checkout master
-    git push -u  {{ kflux_data.knflux_comp_name }} konflux-{{ kflux_data.knflux_comp_name }}
+    git push -u  {{ kflux_data.git_repo_name }} konflux-{{ kflux_data.git_repo_name }}
 
 - name: open GitHub pull request
   ansible.builtin.uri:
@@ -74,7 +80,7 @@
     body_format: json
     body: >
       {
-        "head": "konflux-{{ kflux_data.knflux_comp_name }}",
+        "head": "konflux-{{ kflux_data.git_repo_name }}",
         "base": "master",
         "title": "Add Tekton rpm build pipelines for {{ kflux_data.knflux_comp_name }}"
       }

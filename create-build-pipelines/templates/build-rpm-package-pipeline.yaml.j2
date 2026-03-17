@@ -18,6 +18,8 @@ metadata:
   name: "{{ kflux_data.knflux_comp_name }}-on-pull-request"
   namespace: "{{ kflux_data.knflux_tenant_name }}"
 spec:
+  timeouts:
+    pipeline: "6h"
   params:
     - name: package-name
       value: libecpg
@@ -27,9 +29,19 @@ spec:
       value: {{'"{{ revision }}"'}}
     - name: target-branch
       value: "main"
+    - name: build-platforms
+      value:
+        - localhost
+        #- linux/arm64
+        #- linux/ppc64le
+        #- linux/s390x
+        - linux/amd64
     {% if not (build_multi_arch | bool) -%}
     - name: build-architectures
-      value: [ x86_64 ]
+      value:
+        - x86_64
+        #- s390x
+        #- ppc64le
     {% endif -%}
     - name: ociStorage
       value: quay.io/{{ gh_api.kflux_gh_app.installation.quay_org }}/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_comp_name }}:on-pr-{{'{{revision}}'}}
@@ -37,7 +49,7 @@ spec:
     resolver: git
     params:
       - name: url
-        value: https://gitlab.com/fedora/infrastructure/konflux/rpmbuild-pipeline.git
+        value: https://github.com/konflux-ci/rpmbuild-pipeline.git 
       - name: revision
         value: "main"
       - name: pathInRepo
