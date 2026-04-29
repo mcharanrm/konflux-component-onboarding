@@ -1,0 +1,101 @@
+---
+- name: Accept invitations to manage/collaborate on repositories.
+  hosts: localhost
+  gather_subset: 
+    - '!all'
+    - '!min'
+    - 'user_dir'
+  vars_files:
+    - ../vars/konflux_repo_app_component_config.yml
+  tasks:
+    # There are two separate tokens: one for creating repositories
+    # and another for deleting repositories.
+    - block:
+        - name: check whether github_pat_file exists
+          ansible.builtin.include_tasks:
+            file: ../preflight-checks/access-github-pat-file-checks.yaml
+
+        - name: access the content and verify whether PAT exists
+          ansible.builtin.assert:
+            that:
+              - pat_file_status.stat.exists == true
+              - github_pat.create_repositories | regex_search('ghp_.+')
+            success_msg:
+              - All assertions passed. 
+              - File {{ github_pat_file }} exists and the PAT exists to access to GitHub API endpoint and create repositories and to accept repository invitaions
+
+    - name: Access repository invitations for the user to calculate the total no.of pages
+      ansible.builtin.uri:
+        url:   https://api.github.com/user/repository_invitations?per_page=1&page=1
+        method: GET
+        headers:
+          accept: application/vnd.github+json
+          Authorization: "Bearer {{ github_pat.create_repositories }}"
+        status_code:
+          - 200
+      register: access_repository_invitations
+      failed_when: access_repository_invitations.json | length == 0
+
+    - name: Determine the last page of the results
+      ansible.builtin.set_fact:
+        last_page_url: "{% set tmp_page = '' %}{% for item in access_repository_invitations.link.split(',') %}{% if item.find('last') != -1 %}{{ item.strip() }}{% endif %}{% endfor %}"
+      
+    - name: Determine the query string to capture the last page number
+      ansible.builtin.set_fact:
+        url_query_string: "{{ last_page_url.strip().split(';')[0] | regex_replace('[<>]', '') | urlsplit('query') }}"
+
+    - name: Determine the last page number of the total pages available for all the results
+      ansible.builtin.set_fact:
+        last_page_number: "{{ url_query_string.split('&')[-1] | regex_replace('page=', '') | int }}"
+
+    - name: Determine the total no.of pages to iterate over to collect all the repository invitations
+      ansible.builtin.set_fact:
+        total_pages: "{{ (last_page_number // 100) + 1 }}"
+
+    - name: Debug initail data collected from accessing repository_invitations endpoint
+      ansible.builtin.debug:
+        msg:
+          - "Last Page URL           : {{ last_page_url }}"
+          - "URL Query String        : {{  url_query_string }}"
+        verbosity: 1
+
+    - name: Iterate over all the pages and list all the repository invitations for the authenticated user
+      ansible.builtin.uri:
+        url:   https://api.github.com/user/repository_invitations?per_page=100&page={{ item }}
+        method: GET
+        headers:
+          accept: application/vnd.github+json
+          Authorization: "Bearer {{ github_pat.create_repositories }}"
+        status_code:
+          - 200
+      register: total_repository_invitations
+      loop: "{{ range(1, total_pages+1) | list}}"
+
+    - name: Debug total repository invitaions data
+      ansible.builtin.debug:
+        var: total_repository_invitations
+        verbosity: 1
+
+    - name: Calculate the total no.of repository invitations available for the user
+      ansible.builtin.set_fact:
+        total_user_invitations_list: "{% set invitations_list = [] %}{% for each_page in total_repository_invitations.results %}{% for invitation in each_page.json %}{{ invitations_list.append({'url': invitation.url, 'html_url': invitation.html_url}) }}{% endfor %}{% endfor %}{{ invitations_list }}"
+
+    - name: Debug the repository invitations list
+      ansible.builtin.debug:
+        var: total_user_invitations_list
+        verbosity: 1
+
+    - name: Accept a user invitation
+      ansible.builtin.uri:
+        url: "{{ invitation_url }}"
+        method: PATCH
+        headers:
+          accept: application/vnd.github+json
+          Authorization: "Bearer {{ github_pat.create_repositories }}"
+        status_code:
+          - 204
+      loop: "{{ total_user_invitations_list }}"
+      loop_control:
+        label: "{{ item.html_url }}"
+      vars:
+        invitation_url: "{{ item.url }}"

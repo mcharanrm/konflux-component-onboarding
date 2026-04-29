@@ -6,7 +6,7 @@ starts_from:
 ends_at:
 
 # Prefix used when generating GitHub repository names
-repository_name_prefix: "test-rhtap-tenant-repo-"
+repository_name_prefix: "example-rok-libecpg-"
 
 # Prefix used when generating Konflux application names
 application_name_prefix: "test-rhtap-tenant-app-"
