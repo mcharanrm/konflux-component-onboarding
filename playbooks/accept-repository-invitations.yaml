@@ -94,6 +94,10 @@
           Authorization: "Bearer {{ github_pat.create_repositories }}"
         status_code:
           - 204
+      register: accept_invitation_result
+      until: accept_invitation_result.status == 204
+      retries: 3
+      delay: 5
       loop: "{{ total_user_invitations_list }}"
       loop_control:
         label: "{{ item.html_url }}"
