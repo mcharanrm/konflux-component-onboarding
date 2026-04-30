@@ -50,7 +50,7 @@
 
     - name: Determine the total no.of pages to iterate over to collect all the repository invitations
       ansible.builtin.set_fact:
-        total_pages: "{{ (last_page_number // 100) + 1 }}"
+        total_pages: "{{ (last_page_number | int // 100) + 1 }}"
 
     - name: Debug initail data collected from accessing repository_invitations endpoint
       ansible.builtin.debug:
@@ -69,7 +69,7 @@
         status_code:
           - 200
       register: total_repository_invitations
-      loop: "{{ range(1, total_pages+1) | list}}"
+      loop: "{{ range(1, total_pages | int + 1) | list}}"
 
     - name: Debug total repository invitaions data
       ansible.builtin.debug:
@@ -78,7 +78,7 @@
 
     - name: Calculate the total no.of repository invitations available for the user
       ansible.builtin.set_fact:
-        total_user_invitations_list: "{% set invitations_list = [] %}{% for each_page in total_repository_invitations.results %}{% for invitation in each_page.json %}{{ invitations_list.append({'url': invitation.url, 'html_url': invitation.html_url}) }}{% endfor %}{% endfor %}{{ invitations_list }}"
+        total_user_invitations_list: "{% set invitations_list = [] %}{% for each_page in total_repository_invitations.results %}{% for invitation in each_page.json %}{% set _ = invitations_list.append({'url': invitation.url, 'html_url': invitation.html_url}) %}{% endfor %}{% endfor %}{{ invitations_list }}"
 
     - name: Debug the repository invitations list
       ansible.builtin.debug:
@@ -94,6 +94,10 @@
           Authorization: "Bearer {{ github_pat.create_repositories }}"
         status_code:
           - 204
+      register: accept_invitation_result
+      until: accept_invitation_result.status == 204
+      retries: 3
+      delay: 5
       loop: "{{ total_user_invitations_list }}"
       loop_control:
         label: "{{ item.html_url }}"

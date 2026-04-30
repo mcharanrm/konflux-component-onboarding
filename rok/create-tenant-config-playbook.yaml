@@ -22,7 +22,7 @@
     block:
     - name: Create list of Konflux tenant names
       ansible.builtin.set_fact:
-        tenants_list: "{% set tenants = [] %}{% for item in range(index_start|int, index_end|int + 1) %}{{ tenants.append({'tenant_name': prefix_name + (item | string) + suffix_name }) }}{% endfor %}{{ tenants }}"
+        tenants_list: "{% set tenants = [] %}{% for item in range(index_start|int, index_end|int + 1) %}{% set _ = tenants.append({'tenant_name': prefix_name + (item | string) + suffix_name }) %}{% endfor %}{{ tenants }}"
 
     - name: Debug generated tenant names
       ansible.builtin.debug:

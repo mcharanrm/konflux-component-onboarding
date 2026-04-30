@@ -1,24 +1,24 @@
 ---
 - name: generate GitHub repository name list
   ansible.builtin.set_fact:
-    github_repository_names: "{% set tmp_repo_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{{ tmp_repo_names.append({'key': 'git_repo_name', 'value': repository_name_prefix + (item | string)}) }}{% endfor %}{{ tmp_repo_names }}"
+    github_repository_names: "{% set tmp_repo_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{% set _ = tmp_repo_names.append({'key': 'git_repo_name', 'value': repository_name_prefix + (item | string)}) %}{% endfor %}{{ tmp_repo_names }}"
 
 - name: generate Konflux application name lists
   ansible.builtin.set_fact:
-    konflux_application_names: "{% set tmp_app_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{{ tmp_app_names.append({'key': 'knflux_app_name', 'value': application_name_prefix + (item | string)}) }}{% endfor %}{{ tmp_app_names }}"
+    konflux_application_names: "{% set tmp_app_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{% set _ = tmp_app_names.append({'key': 'knflux_app_name', 'value': application_name_prefix + (item | string)}) %}{% endfor %}{{ tmp_app_names }}"
     
 - name: generate Konflux component name lists
   ansible.builtin.set_fact:
-    konflux_component_names: "{% set tmp_comp_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{{ tmp_comp_names.append({'key': 'knflux_comp_name', 'value': component_name_prefix + (item | string)}) }}{% endfor %}{{ tmp_comp_names }}"
+    konflux_component_names: "{% set tmp_comp_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{% set _ = tmp_comp_names.append({'key': 'knflux_comp_name', 'value': component_name_prefix + (item | string)}) %}{% endfor %}{{ tmp_comp_names }}"
 
 - name: generate tenant names for rok scenario
   ansible.builtin.set_fact:
-    konflux_tenant_names: "{% set tmp_rok_tenants = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{{ tmp_rok_tenants.append({'key': 'knflux_tenant_name', 'value': rok_tenant_namespace_prefix + (item | string) + rok_tenant_namespace_suffix }) }}{% endfor %}{{ tmp_rok_tenants }}"
+    konflux_tenant_names: "{% set tmp_rok_tenants = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{% set _ = tmp_rok_tenants.append({'key': 'knflux_tenant_name', 'value': rok_tenant_namespace_prefix + (item | string) + rok_tenant_namespace_suffix }) %}{% endfor %}{{ tmp_rok_tenants }}"
   when: test_scenario == 'rok'
 
 - name: generate tenant names for fkx scenario
   ansible.builtin.set_fact:
-    konflux_tenant_names: "{% set tmp_fkx_tenants = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{{ tmp_fkx_tenants.append({'key': 'knflux_tenant_name', 'value': fedora_tenant_namespace }) }}{% endfor %}{{ tmp_fkx_tenants }}"
+    konflux_tenant_names: "{% set tmp_fkx_tenants = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{% set _ = tmp_fkx_tenants.append({'key': 'knflux_tenant_name', 'value': fedora_tenant_namespace }) %}{% endfor %}{{ tmp_fkx_tenants }}"
   when: test_scenario == 'fkx'
 
 - name: zip Konflux applications, components, tenant namespaces and GitHub repositories
@@ -27,7 +27,7 @@
 
 - name: convert zipped Konflux app/component/repo data to list of dictionaries
   ansible.builtin.set_fact:
-    konflux_mapped_data: "{% set tmp_map_values=[] %}{% for item in konflux_zipped_data %}{{ tmp_map_values.append(item | items2dict) }}{% endfor %}{{ tmp_map_values }}"
+    konflux_mapped_data: "{% set tmp_map_values=[] %}{% for item in konflux_zipped_data %}{% set _ = tmp_map_values.append(item | items2dict) %}{% endfor %}{{ tmp_map_values }}"
 
 - name: debug generated name list
   ansible.builtin.debug:
