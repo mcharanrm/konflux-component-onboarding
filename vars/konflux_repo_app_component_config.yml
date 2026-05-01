@@ -9,10 +9,10 @@ ends_at:
 repository_name_prefix: "example-rok-libecpg-"
 
 # Prefix used when generating Konflux application names
-application_name_prefix: "test-rhtap-tenant-app-"
+application_name_prefix: "example-packages"
 
 # Prefix used when generating Konflux component names
-component_name_prefix: "test-rhtap-tenant-comp-"
+component_name_prefix: "example-rok-libecpg"
 
 # Test scenarios [rok - RHEL on Konflux and Fedora on Konflux | fkx - Fedora on Konflux]
 test_scenario:
@@ -87,7 +87,7 @@ github_api:
     expected_status: 201
 
   # Number of retry attempts
-  retries: 60
+  retries: 1
 
   # Delay (in seconds) between retry attempts
-  delay_seconds: 60
+  delay_seconds: 1
