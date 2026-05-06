@@ -48,10 +48,10 @@ spec:
 
     # Konflux - Deprecated
     #
-    # We don't expect users to rely on the following resources. For some of them 
+    # We don't expect users to rely on the following resources. For some of them
     # not event to be present on all clusters.
-    # It's still possible for users or their automation to manage these resources 
-    # on some clusters. That's because CRDs are installed on some clusters and 
+    # It's still possible for users or their automation to manage these resources
+    # on some clusters. That's because CRDs are installed on some clusters and
     # because permissions are provided via the `appstudio-*-user-actions` Roles.
     # This block can be removed once cleanup is completed.
     count/componentdetectionqueries.appstudio.redhat.com: "0"

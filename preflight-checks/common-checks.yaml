@@ -1,3 +1,4 @@
+---
 - name: check input numerical range variables
   ansible.builtin.assert:
     that:

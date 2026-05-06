@@ -48,5 +48,3 @@
 - name: show the iteration of the loop at the end
   ansible.builtin.debug:
     msg: "successfully deleted github repository for {{ kflux_data.git_repo_name }}"
-
-

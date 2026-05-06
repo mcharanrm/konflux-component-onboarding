@@ -1,5 +1,5 @@
 ---
-- name: check whether github_pat_file exists 
+- name: check whether github_pat_file exists
   ansible.builtin.stat:
     path: "{{ github_pat_file }}"
   register: pat_file_status

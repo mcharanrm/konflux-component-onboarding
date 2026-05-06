@@ -16,4 +16,3 @@ spec:
       dockerfileUrl: Dockerfile.scratch
       url: https://github.com/mcharanrm/konflux-component-scaling-work.git
       revision: master
-

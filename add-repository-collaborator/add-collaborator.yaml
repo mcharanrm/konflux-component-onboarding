@@ -1,4 +1,4 @@
-
+---
 - name: show the current iteration of the loop at the beginning
   ansible.builtin.debug:
     msg: "Adding user to the repository as a collaborator for {{ kflux_data.git_repo_name }}"
@@ -7,7 +7,7 @@
   ansible.builtin.uri:
     url: "https://api.github.com/repos/mcharanrm/{{ kflux_data.git_repo_name }}/collaborators/{{ github_user_name }}"
     method: GET
-    headers: 
+    headers:
       accept: application/vnd.github+json
       Authorization: "Bearer {{ gh_pat.create_repositories }}"
     status_code:
@@ -17,7 +17,7 @@
   ansible.builtin.uri:
     url: "https://api.github.com/repos/mcharanrm/{{ kflux_data.git_repo_name }}/collaborators/{{ github_user_name }}"
     method: PUT
-    headers: 
+    headers:
       accept: application/vnd.github+json
       Authorization: "Bearer {{ gh_pat.create_repositories }}"
     body_format: json

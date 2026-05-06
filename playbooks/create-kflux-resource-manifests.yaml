@@ -1,7 +1,7 @@
 ---
 - name: create GitHub repositories
   hosts: localhost
-  gather_subset: 
+  gather_subset:
     - '!all'
     - '!min'
     - 'user_dir'
@@ -11,7 +11,7 @@
     # run pre-flight checks that are common
     - ansible.builtin.include_tasks:
         file: ../preflight-checks/common-checks.yaml
-    
+
     - block:
       # run pre-flight checks specific to generate names
       - ansible.builtin.include_tasks:
@@ -20,7 +20,7 @@
       # run tasks to generate names
       - ansible.builtin.include_tasks:
           file: ../generate-resource-names/tasks.yaml
-    
+
     # run the tasks required to create repositories and install Konflux GitHub app to the repositories
     - ansible.builtin.include_tasks:
         file: ../create-konflux-manifests/tasks.yaml
