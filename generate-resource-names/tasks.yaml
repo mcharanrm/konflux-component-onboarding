@@ -31,7 +31,7 @@
 
 - name: debug generated name list
   ansible.builtin.debug:
-    msg: 
+    msg:
     - "github_repository_names  : {{ github_repository_names }}"
     - "konflux_application_names: {{ konflux_application_names}}"
     - "konflux_component_names  : {{ konflux_component_names }}"
@@ -55,6 +55,6 @@
       - konflux_component_names | length == total_items_count | int
       - konflux_tenant_names | length == total_items_count | int
       - konflux_mapped_data | length == total_items_count | int
-    success_msg: 
+    success_msg:
       - "All assertions passed"
       - "Total items in the generated name list matches the total range ({{ total_items_count }}) defined"

@@ -1,3 +1,4 @@
+---
 - name: show the current iteration of the loop at the beginning
   ansible.builtin.debug:
     msg: "start creating manifests for tenant - {{ kflux_data.knflux_tenant_name }} and component - {{ kflux_data.knflux_comp_name }}"
@@ -33,9 +34,9 @@
           name: konflux-perf-scale-release-plan-{{ plan_number }}
           namespace: "{{ kflux_data.knflux_tenant_name }}"
           labels:
-            release.appstudio.openshift.io/auto-release: 'false' 
+            release.appstudio.openshift.io/auto-release: 'false'
             release.appstudio.openshift.io/standing-attribution: 'true'
-        spec: 
+        spec:
           application: "{{ kflux_data.knflux_app_name }}"
           target: managed-release-team-tenant
       {% endfor %}
@@ -45,7 +46,7 @@
   when: test_scenario == 'rok'
 
 - name: register ReleasePlan manifest in kustomization
-  ansible.builtin.lineinfile: 
+  ansible.builtin.lineinfile:
     path: "../{{ test_scenario }}/tenants/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_app_name }}/kustomization.yaml"
     line: "{% filter indent(width=2, first=true) %}- konflux-perf-scale-release-plan.yaml{% endfilter %}"
     insertafter: EOF

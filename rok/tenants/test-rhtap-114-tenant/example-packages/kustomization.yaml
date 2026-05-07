@@ -1,19 +1,20 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 patches:
   # JSON patch
   - target:
-      kind: Application 
+      kind: Application
       name: app
     patch: |-
       - op: replace
         path: /metadata/name
-        value: example-packages 
+        value: example-packages
       - op: replace
         path: /metadata/namespace
         value: test-rhtap-114-tenant
-      - op: replace 
+      - op: replace
         path: /spec/displayName
         value: example-packages
   - target:
@@ -22,7 +23,7 @@ patches:
     patch: |-
       - op: replace
         path: /metadata/name
-        value: example-rok-libecpg      
+        value: example-rok-libecpg
       - op: replace
         path: /metadata/namespace
         value: test-rhtap-114-tenant

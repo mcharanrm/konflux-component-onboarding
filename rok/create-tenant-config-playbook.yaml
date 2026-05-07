@@ -1,7 +1,7 @@
 ---
 - name: Generate manifests for Konflux tenant creation
   hosts: localhost
-  gather_facts: off
+  gather_facts: false
   vars:
     index_start: "{{ starts_from | default(0) }}"
     index_end: "{{ ends_at | default(-1) }}"
@@ -11,13 +11,13 @@
     suffix_name: "-tenant"
   tasks:
   - name: Run pre-flight checks
-    block:  
+    block:
     - name: Validate input parameters
       ansible.builtin.assert:
         that:
         - total_items_count | int >= 0
         success_msg: "All Pre-flight Checks Passed"
-  
+
   - name: Generate tenant names
     block:
     - name: Create list of Konflux tenant names

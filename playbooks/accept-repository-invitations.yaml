@@ -1,7 +1,7 @@
 ---
 - name: Accept invitations to manage/collaborate on repositories.
   hosts: localhost
-  gather_subset: 
+  gather_subset:
     - '!all'
     - '!min'
     - 'user_dir'
@@ -21,12 +21,12 @@
               - pat_file_status.stat.exists == true
               - github_pat.create_repositories | regex_search('ghp_.+')
             success_msg:
-              - All assertions passed. 
+              - All assertions passed.
               - File {{ github_pat_file }} exists and the PAT exists to access to GitHub API endpoint and create repositories and to accept repository invitaions
 
     - name: Access repository invitations for the user to calculate the total no.of pages
       ansible.builtin.uri:
-        url:   https://api.github.com/user/repository_invitations?per_page=1&page=1
+        url: https://api.github.com/user/repository_invitations?per_page=1&page=1
         method: GET
         headers:
           accept: application/vnd.github+json
@@ -39,7 +39,7 @@
     - name: Determine the last page of the results
       ansible.builtin.set_fact:
         last_page_url: "{% set tmp_page = '' %}{% for item in access_repository_invitations.link.split(',') %}{% if item.find('last') != -1 %}{{ item.strip() }}{% endif %}{% endfor %}"
-      
+
     - name: Determine the query string to capture the last page number
       ansible.builtin.set_fact:
         url_query_string: "{{ last_page_url.strip().split(';')[0] | regex_replace('[<>]', '') | urlsplit('query') }}"
@@ -61,7 +61,7 @@
 
     - name: Iterate over all the pages and list all the repository invitations for the authenticated user
       ansible.builtin.uri:
-        url:   https://api.github.com/user/repository_invitations?per_page=100&page={{ item }}
+        url: https://api.github.com/user/repository_invitations?per_page=100&page={{ item }}
         method: GET
         headers:
           accept: application/vnd.github+json

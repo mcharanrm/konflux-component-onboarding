@@ -1,7 +1,7 @@
 ---
 - name: delete GitHub repositories
   hosts: localhost
-  gather_subset: 
+  gather_subset:
     - '!all'
     - '!min'
     - 'user_dir'
@@ -27,7 +27,7 @@
               - github_pat.create_repositories | regex_search('ghp_.+')
               - github_pat.delete_repositories | regex_search('ghp_.+')
             success_msg:
-              - All assertions passed. 
+              - All assertions passed.
               - File {{ github_pat_file }} exists and the PAT exists to access to GitHub API endpoint and delete repositories
 
     - block:
@@ -37,7 +37,7 @@
       # run tasks to generate names
       - ansible.builtin.include_tasks:
           file: ../generate-resource-names/tasks.yaml
-    
+
     # run the tasks required to create repositories and install Konflux GitHub app to the repositories
     - ansible.builtin.include_tasks:
         file: ../delete-repositories/tasks.yaml
@@ -48,4 +48,3 @@
       loop: "{{ konflux_mapped_data }}"
       loop_control:
         label: "{{ item.git_repo_name }}"
-      

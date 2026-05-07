@@ -1,3 +1,4 @@
+---
 - name: show the current iteration of the loop at the beginning
   ansible.builtin.debug:
     msg: "start creating github repository for {{ kflux_data.git_repo_name }}"
@@ -18,7 +19,7 @@
     status_code: "{{ gh_api.create_repository.expected_status | int }}"
   ignore_errors: true
   retries: "{{ gh_api.retries }}"
-  delay: "{{ gh_api.delay_seconds }}"                                    
+  delay: "{{ gh_api.delay_seconds }}"
   until: (create_repository_response.status | int) == (gh_api.create_repository.expected_status | int)
   register: create_repository_response
 
@@ -32,7 +33,7 @@
     status_code: "{{ gh_api.kflux_gh_app.add.expected_status }}"
   ignore_errors: true
   retries: "{{ gh_api.retries }}"
-  delay: "{{ gh_api.delay_seconds }}"                                    
+  delay: "{{ gh_api.delay_seconds }}"
   until: (app_install_status.status | int) == (gh_api.kflux_gh_app.add.expected_status | int)
   register: app_install_status
 

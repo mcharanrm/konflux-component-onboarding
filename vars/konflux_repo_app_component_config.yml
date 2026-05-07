@@ -51,7 +51,7 @@ github_api:
   create_repository:
     path: "/user/repos"
     method: "POST"
-    expected_status: 201  
+    expected_status: 201
 
   # Endpoint for deleting GitHub repositories
   delete_repository:
@@ -62,7 +62,7 @@ github_api:
   # Endpoint for adding/removing a repository to a GitHub App installation
   kflux_gh_app:
     installation:
-      path:  "/user/installations/88047488/repositories"
+      path: "/user/installations/88047488/repositories"
       quay_org: "redhat-user-workloads-stage"
     add:
       method: "PUT"
@@ -70,15 +70,16 @@ github_api:
     remove:
       method: "PUT"
       expected_status: 204
-    # konflux_staging:
-    #   path: "/user/installations/88047488/repositories"
-    #   quay_org: "redhat-user-workloads-stage"
-    # konflux_fedora:
-    #   path:  "/user/installations/89145558/repositories"
-    #   quay_org: "konflux-fedora"
-    # redhat_konflux:
-    #   path: "/user/installations/88048036/repositories"
-    #   quay_org: "redhat-user-workloads"
+
+  # konflux_staging:
+  #   path: "/user/installations/88047488/repositories"
+  #   quay_org: "redhat-user-workloads-stage"
+  # konflux_fedora:
+  #   path: "/user/installations/89145558/repositories"
+  #   quay_org: "konflux-fedora"
+  # redhat_konflux:
+  #   path: "/user/installations/88048036/repositories"
+  #   quay_org: "redhat-user-workloads"
 
   # Endpoint for creating GitHub Pull Requests
   create_pull_request:
