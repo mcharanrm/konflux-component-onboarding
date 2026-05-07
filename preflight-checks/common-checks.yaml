@@ -11,3 +11,9 @@
       - (ends_at | int) >= (starts_from | int)
     fail_msg: "either the variable is empty or contains non-numerical characters"
     success_msg: "variables $starts_from and $ends_at are correctly defined and the range is acceptable"
+- name: check input scenario variable
+  ansible.builtin.assert:
+    that:
+      - test_scenario == "rok" or test_scenario == "fkx"
+    fail_msg: "either the variable is empty or contains unexpected value"
+    success_msg: "variable $test_scenario have correct value"
