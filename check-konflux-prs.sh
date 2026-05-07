@@ -85,8 +85,6 @@ for i in $(seq "$start" "$end"); do
         check_finished=$((check_finished + 1))
         if [[ "$csv_result" == "pass" ]]; then
             check_passed=$((check_passed + 1))
-        fi
-        if [[ "$csv_result" == "pass" ]]; then
             result_color="$GREEN"
         else
             result_color="$RED"
@@ -105,7 +103,7 @@ for i in $(seq "$start" "$end"); do
     pr_count=$(echo "$pr_json" | jq 'length')
 
     if [[ "$pr_count" -ne 1 ]]; then
-        echo -e "  ${YELLOW}WARNING: Expected 1 open PR, found $pr_count. Skipping.${RESET}"
+        echo -e "  ${RED}ERROR: Expected 1 open PR, found $pr_count. Skipping.${RESET}"
         continue
     fi
 
@@ -126,7 +124,7 @@ for i in $(seq "$start" "$end"); do
     check=$(echo "$checks_json" | jq -r --arg name "$CHECK_NAME" '[.[] | select(.name == $name)] | first // empty')
 
     if [[ -z "$check" ]]; then
-        echo -e "  ${YELLOW}Check '$CHECK_NAME' not found. Skipping.${RESET}"
+        echo -e "  ${RED}Check '$CHECK_NAME' not found. Skipping.${RESET}"
         continue
     fi
 
@@ -148,7 +146,7 @@ for i in $(seq "$start" "$end"); do
 
     if [[ "$check_bucket" != "pass" ]]; then
         echo -e "  ${RED}FAILED${RESET} | pipelinerun: $pipelinerun | $started_at -> $completed_at"
-        echo -e "  ${RED}Link: $link${RESET}"
+        echo -e "  ${YELLOW}Link: $link${RESET}"
         echo "$repo,$pr_url,$pipelinerun,$started_at,$completed_at,fail" >> "$CSV_FILE"
         continue
     fi
