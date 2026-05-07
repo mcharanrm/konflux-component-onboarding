@@ -5,11 +5,11 @@
 
 - name: generate Konflux application name lists
   ansible.builtin.set_fact:
-    konflux_application_names: "{% set tmp_app_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{% set _ = tmp_app_names.append({'key': 'knflux_app_name', 'value': application_name_prefix + (item | string)}) %}{% endfor %}{{ tmp_app_names }}"
-
+    konflux_application_names: "{% set tmp_app_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{% if test_scenario == 'rok' %}{% set item = '' %}{% endif %}{% set _ = tmp_app_names.append({'key': 'knflux_app_name', 'value': application_name_prefix + (item | string)}) %}{% endfor %}{{ tmp_app_names }}"
+    
 - name: generate Konflux component name lists
   ansible.builtin.set_fact:
-    konflux_component_names: "{% set tmp_comp_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{% set _ = tmp_comp_names.append({'key': 'knflux_comp_name', 'value': component_name_prefix + (item | string)}) %}{% endfor %}{{ tmp_comp_names }}"
+    konflux_component_names: "{% set tmp_comp_names = [] %}{% for item in range(starts_from|int, ends_at|int + 1) %}{% if test_scenario == 'rok' %}{% set item = '' %}{% endif %}{% set _ = tmp_comp_names.append({'key': 'knflux_comp_name', 'value': component_name_prefix + (item | string)}) %}{% endfor %}{{ tmp_comp_names }}"
 
 - name: generate tenant names for rok scenario
   ansible.builtin.set_fact:
