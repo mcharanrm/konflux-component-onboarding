@@ -33,15 +33,13 @@ spec:
       value:
         - localhost
         - linux/arm64
-        - linux/ppc64le
-        - linux/s390x
         - linux/amd64
-    {% if not (build_multi_arch | bool) -%}
+        #- linux/ppc64le
+        #- linux/s390x
     - name: build-architectures
       value:
         - x86_64
         - aarch64
-    {% endif -%}
     - name: ociStorage
       value: quay.io/{{ gh_api.kflux_gh_app.installation.quay_org }}/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_comp_name }}:on-pr-{{'{{revision}}'}}
   pipelineRef:
