@@ -1,0 +1,26 @@
+---
+starts_from: 1
+ends_at: 10
+repository_name_prefix: "example-repo-"
+application_name_prefix: "jhutar-app"
+component_name_prefix: "jhutar-comp"
+test_scenario: "rok"
+github_org: "jhutar"
+dockerfile_url: "Dockerfile"
+git_revision: "main"
+source_repo_dir: "sample-repo"
+
+github_api:
+  base_url: "https://api.github.com"
+  create_repository:
+    path: "/user/repos"
+    method: "POST"
+    expected_status: 201
+  kflux_gh_app:
+    installation:
+      path: "/user/installations/59647864/repositories"
+    add:
+      method: "PUT"
+      expected_status: 204
+  retries: 1
+  delay_seconds: 1

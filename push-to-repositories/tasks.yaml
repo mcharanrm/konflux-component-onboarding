@@ -1,0 +1,28 @@
+---
+- name: show the current iteration of the loop at the beginning
+  ansible.builtin.debug:
+    msg: "start pushing source repo to {{ kflux_data.git_repo_name }}"
+
+- name: check that {{ dockerfile_url }} exists in source repo
+  ansible.builtin.stat:
+    path: "../{{ source_repo_dir }}/{{ dockerfile_url }}"
+  register: dockerfile_status
+  failed_when: not dockerfile_status.stat.exists
+
+- name: check that source repo is a git repository
+  ansible.builtin.stat:
+    path: "../{{ source_repo_dir }}/.git"
+  register: git_dir_status
+  failed_when: not git_dir_status.stat.exists
+
+- name: push source repo to {{ kflux_data.git_repo_name }}
+  ansible.builtin.shell: |
+    cd ../{{ source_repo_dir }}
+    git branch -M {{ git_revision }}
+    git remote remove origin || true
+    git remote add origin git@github.com:{{ github_org }}/{{ kflux_data.git_repo_name }}.git
+    git push -u origin {{ git_revision }}
+
+- name: show the iteration of the loop at the end
+  ansible.builtin.debug:
+    msg: "successfully pushed source repo to {{ kflux_data.git_repo_name }}"

@@ -9,38 +9,39 @@ patches:
     patch: |-
       - op: replace
         path: /metadata/name
-        value: {{ kflux_data.knflux_app_name }} 
+        value: jhutar-app6 
       - op: replace
         path: /metadata/namespace
-        value: {{ kflux_data.knflux_tenant_name }}
+        value: test-rhtap-6-tenant
       - op: replace 
         path: /spec/displayName
-        value: {{ kflux_data.knflux_app_name }}
+        value: jhutar-app6
   - target:
       kind: Component
       name: comp
     patch: |-
       - op: replace
         path: /metadata/name
-        value: {{ kflux_data.knflux_comp_name }}      
+        value: jhutar-comp6      
       - op: replace
         path: /metadata/namespace
-        value: {{ kflux_data.knflux_tenant_name }}
+        value: test-rhtap-6-tenant
       - op: replace
         path: /spec/application
-        value: {{ kflux_data.knflux_app_name }}
+        value: jhutar-app6
       - op: replace
         path: /spec/componentName
-        value: {{  kflux_data.knflux_comp_name }}
+        value: jhutar-comp6
       - op: replace
         path: /spec/source/git/dockerfileUrl
-        value: {{ dockerfile_url }}
+        value: Dockerfile
       - op: replace
         path: /spec/source/git/url
-        value: https://github.com/{{ github_org }}/{{ kflux_data.git_repo_name }}.git
+        value: https://github.com/jhutar/example-repo-6.git
       - op: replace
         path: /spec/source/git/revision
-        value: {{ git_revision }}
+        value: main
 
 resources:
   - ../../../../create-konflux-manifests/base
+  - konflux-perf-scale-release-plan.yaml
