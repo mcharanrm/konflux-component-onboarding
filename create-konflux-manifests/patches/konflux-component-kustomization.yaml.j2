@@ -33,8 +33,14 @@ patches:
         path: /spec/componentName
         value: {{  kflux_data.knflux_comp_name }}
       - op: replace
+        path: /spec/source/git/dockerfileUrl
+        value: {{ dockerfile_url }}
+      - op: replace
         path: /spec/source/git/url
-        value: https://github.com/mcharanrm/{{ kflux_data.git_repo_name }}.git
+        value: https://github.com/{{ github_org }}/{{ kflux_data.git_repo_name }}.git
+      - op: replace
+        path: /spec/source/git/revision
+        value: {{ git_revision }}
 
 resources:
   - ../../../../create-konflux-manifests/base

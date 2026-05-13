@@ -26,8 +26,17 @@ rok_tenant_namespace_prefix: 'test-rhtap-'
 # rok tenant workspace(s) suffic
 rok_tenant_namespace_suffix: '-tenant'
 
+# Dockerfile path used in component spec
+dockerfile_url: "Dockerfile.scratch"
+
+# Git revision used in component spec
+git_revision: "master"
+
 # Run RPM build with multiple architectures
 build_multi_arch: false
+
+# GitHub organization or user for repository URLs
+github_org: "mcharanrm"
 
 # RPM package source in GitHub
 distgit_rpm_package_source: "git@github.com:mcharanrm/example-fedora-konflux-libecpg-perf-fork.git"
