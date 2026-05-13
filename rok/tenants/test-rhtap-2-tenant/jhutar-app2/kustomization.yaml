@@ -1,0 +1,47 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+patches:
+  # JSON patch
+  - target:
+      kind: Application 
+      name: app
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: jhutar-app2 
+      - op: replace
+        path: /metadata/namespace
+        value: test-rhtap-2-tenant
+      - op: replace 
+        path: /spec/displayName
+        value: jhutar-app2
+  - target:
+      kind: Component
+      name: comp
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: jhutar-comp2      
+      - op: replace
+        path: /metadata/namespace
+        value: test-rhtap-2-tenant
+      - op: replace
+        path: /spec/application
+        value: jhutar-app2
+      - op: replace
+        path: /spec/componentName
+        value: jhutar-comp2
+      - op: replace
+        path: /spec/source/git/dockerfileUrl
+        value: Dockerfile
+      - op: replace
+        path: /spec/source/git/url
+        value: https://github.com/jhutar/example-repo-2.git
+      - op: replace
+        path: /spec/source/git/revision
+        value: main
+
+resources:
+  - ../../../../create-konflux-manifests/base
+  - konflux-perf-scale-release-plan.yaml
