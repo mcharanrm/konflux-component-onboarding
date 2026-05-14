@@ -8,6 +8,7 @@ metadata:
     build.appstudio.openshift.io/request: configure-pac-no-mr
     build.appstudio.openshift.io/pipeline: '{"name":"docker-build-oci-ta","bundle":"latest"}'
     image.redhat.com/generate: '{"visibility": "public"}'
+    mintmaker.appstudio.redhat.com/disabled: "true"
 spec:
   application: app
   componentName: comp
