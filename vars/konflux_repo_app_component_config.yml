@@ -41,11 +41,8 @@ build_multi_arch: false
 # GitHub organization or user for repository URLs
 github_org: "mcharanrm"
 
-# Directory with source git repo to push to created GitHub repositories
-source_repo_dir: "sample-repo"
-
-# RPM package source in GitHub
-distgit_rpm_package_source: "git@github.com:mcharanrm/example-fedora-konflux-libecpg-perf-fork.git"
+# Source git repo to clone and push to created GitHub repositories (local path or remote URL)
+source_git_repo: "git@github.com:mcharanrm/example-fedora-konflux-libecpg-perf-fork.git"
 
 # Temporary workspace/directory for generating build pipelines, committing it and creating pull requests
 git_workspace_dir: "build-pipelines-workspace"
