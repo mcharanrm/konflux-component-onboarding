@@ -26,6 +26,9 @@ rok_tenant_namespace_prefix: 'test-rhtap-'
 # rok tenant workspace(s) suffic
 rok_tenant_namespace_suffix: '-tenant'
 
+# Overlay to use for component manifests (package or container)
+component_overlay: "package"
+
 # Dockerfile path used in component spec
 dockerfile_url: "Dockerfile.scratch"
 

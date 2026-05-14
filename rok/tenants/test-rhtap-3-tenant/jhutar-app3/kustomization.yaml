@@ -43,5 +43,5 @@ patches:
         value: main
 
 resources:
-  - ../../../../create-konflux-manifests/base
+  - ../../../../create-konflux-manifests/overlays/container
   - konflux-perf-scale-release-plan.yaml
