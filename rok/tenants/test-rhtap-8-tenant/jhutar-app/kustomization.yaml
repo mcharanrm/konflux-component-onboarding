@@ -41,7 +41,15 @@ patches:
       - op: replace
         path: /spec/source/git/revision
         value: main
+  - target:
+      kind: ReleasePlan
+    patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: test-rhtap-8-tenant
+      - op: replace
+        path: /spec/application
+        value: jhutar-app
 
 resources:
   - ../../../../create-konflux-manifests/overlays/container
-  - konflux-perf-scale-release-plan.yaml

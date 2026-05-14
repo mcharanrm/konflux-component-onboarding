@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
 - application.yaml
 - component.yaml
+- konflux-perf-scale-release-plan.yaml

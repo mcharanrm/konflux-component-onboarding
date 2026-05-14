@@ -17,7 +17,7 @@
   ansible.builtin.file:
     path: "../{{ test_scenario }}/tenants/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_app_name }}/konflux-perf-scale-release-plan.yaml"
     state: absent
-  when: test_scenario == 'rok'
+  when: test_scenario == 'rok' and component_overlay != 'container'
 
 - name: generate ReleasePlanList manifest (ROK only)
   ansible.builtin.lineinfile:
@@ -43,7 +43,7 @@
     create: true
     state: present
     insertafter: EOF
-  when: test_scenario == 'rok'
+  when: test_scenario == 'rok' and component_overlay != 'container'
 
 - name: register ReleasePlan manifest in kustomization
   ansible.builtin.lineinfile:
@@ -51,7 +51,7 @@
     line: "{% filter indent(width=2, first=true) %}- konflux-perf-scale-release-plan.yaml{% endfilter %}"
     insertafter: EOF
     state: present
-  when: test_scenario == 'rok'
+  when: test_scenario == 'rok' and component_overlay != 'container'
 
 - name: show the iteration of the loop at the end
   ansible.builtin.debug:

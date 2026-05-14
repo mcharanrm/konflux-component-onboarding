@@ -41,6 +41,17 @@ patches:
       - op: replace
         path: /spec/source/git/revision
         value: {{ git_revision }}
+{% if component_overlay == 'container' %}
+  - target:
+      kind: ReleasePlan
+    patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: {{ kflux_data.knflux_tenant_name }}
+      - op: replace
+        path: /spec/application
+        value: {{ kflux_data.knflux_app_name }}
+{% endif %}
 
 resources:
   - ../../../../create-konflux-manifests/overlays/{{ component_overlay }}
