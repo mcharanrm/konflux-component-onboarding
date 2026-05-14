@@ -16,16 +16,31 @@
         "name": "{{ kflux_data.git_repo_name }}",
         "description": "This repository is created as part of the perf&scale work. This is integrated with Konflux component - {{ kflux_data.knflux_comp_name }} and it is deployed on {{ kflux_data.knflux_tenant_name }}"
       }
-    status_code: "{{ gh_api.create_repository.expected_status | int }}"
-  ignore_errors: true
+    status_code:
+      - "{{ gh_api.create_repository.expected_status | int }}"
+      - 422
   retries: "{{ gh_api.retries }}"
   delay: "{{ gh_api.delay_seconds }}"
-  until: (create_repository_response.status | int) == (gh_api.create_repository.expected_status | int)
   register: create_repository_response
+
+- name: get existing repository ID when repo already exists
+  ansible.builtin.uri:
+    url: "{{ gh_api.base_url }}{{ gh_api.get_repository.path }}/{{ kflux_data.git_repo_name }}"
+    method: "{{ gh_api.get_repository.method }}"
+    headers:
+      accept: application/vnd.github+json
+      Authorization: "Bearer {{ gh_pat.create_repositories }}"
+    status_code: "{{ gh_api.get_repository.expected_status | int }}"
+  register: existing_repository_response
+  when: create_repository_response.status == 422
+
+- name: set repository ID
+  ansible.builtin.set_fact:
+    repo_id: "{{ create_repository_response.json.id if create_repository_response.status != 422 else existing_repository_response.json.id }}"
 
 - name: Register Repository with GitHub App Installation
   ansible.builtin.uri:
-    url: "{{ gh_api.base_url}}{{ gh_api.kflux_gh_app.installation.path }}/{{ create_repository_response.json.id }}"
+    url: "{{ gh_api.base_url }}{{ gh_api.kflux_gh_app.installation.path }}/{{ repo_id }}"
     method: "{{ gh_api.kflux_gh_app.add.method }}"
     headers:
       accept: application/vnd.github+json
