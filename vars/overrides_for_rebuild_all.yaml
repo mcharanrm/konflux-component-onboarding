@@ -1,6 +1,6 @@
 ---
 starts_from: 1
-ends_at: 10
+ends_at: 100
 repository_name_prefix: "example-repo-"
 application_name_prefix: "jhutar-app"
 component_name_prefix: "jhutar-comp"

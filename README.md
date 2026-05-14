@@ -16,7 +16,7 @@ Create Konflux manifests (Applications, Components):
 ansible-playbook playbooks/create-kflux-resource-manifests.yaml -e @vars/overrides_for_rebuild_all.yaml
 ```
 
-Push template `./sample-repo/` git repo to these repos:
+Push template git repo to these repos:
 
 ```
 ansible-playbook playbooks/push-to-github-repositories.yaml -e @vars/overrides_for_rebuild_all.yaml
@@ -39,7 +39,7 @@ ansible-playbook playbooks/create-trigger-build-pipeline.yaml -e @vars/overrides
 Collect basic stats about the runs:
 
 ```
-./check-konflux-prs.sh 1 10
+./check-konflux-prs.sh 1 100
 ```
 
 ## Linting and formatting
