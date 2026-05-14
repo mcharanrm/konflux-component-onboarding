@@ -58,7 +58,7 @@
 
 - name: render build pipeline templates
   ansible.builtin.template:
-    src: ../create-build-pipelines/templates/build-rpm-package-pipeline.yaml.j2
+    src: ../create-build-pipelines/templates/{{ component_overlay }}/build-pipeline.yaml.j2
     dest: "../{{ git_workspace_dir }}/{{ rpm_pkg_name }}/.tekton/{{ kflux_data.git_repo_name }}-pull-request.yaml"
 
 - name: create feature branch and commit changes
