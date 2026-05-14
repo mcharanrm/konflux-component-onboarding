@@ -9,6 +9,7 @@ github_org: "jhutar"
 dockerfile_url: "Dockerfile"
 git_revision: "main"
 source_repo_dir: "sample-repo"
+component_overlay: "container"
 
 github_api:
   base_url: "https://api.github.com"
