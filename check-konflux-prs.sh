@@ -54,7 +54,6 @@ fi
 
 # CSV setup
 CSV_FILE="results.csv"
-CHECK_NAME="Konflux Staging / example-rok-libecpg-on-pull-request"
 
 if [[ ! -f "$CSV_FILE" ]]; then
     echo "repo,pr_url,pipelinerun,started_at,completed_at,result" > "$CSV_FILE"
@@ -67,9 +66,19 @@ check_finished=0
 check_passed=0
 skipped=0
 
+# === Container scenario ===
+REPO_BASE="jhutar/example-repo-"
+CHECK_NAME="Konflux Staging / jhutar-comp-on-pull-request"
+
+# === Package scenario ===
+# REPO_BASE="mcharanrm/example-rok-libecpg-"
+# CHECK_NAME="Konflux Staging / example-rok-libecpg-on-pull-request"
+
+
 # Main loop
 for i in $(seq "$start" "$end"); do
-    repo="mcharanrm/example-rok-libecpg-$i"
+    repo="${REPO_BASE}$i"
+
     total=$((total + 1))
 
     echo -e "${BOLD}[$i] $repo${RESET}"
