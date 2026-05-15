@@ -66,36 +66,24 @@ def print_group_stats(label, durations):
 def main():
     args = parse_args()
 
-    try:
-        with open(args.csv, newline="") as f:
-            reader = csv.DictReader(f)
+    with open(args.csv, newline="") as f:
+        reader = csv.DictReader(f)
 
-            required = {
-                "repo",
-                "started_at",
-                "completed_at",
-                "result",
-            }
-            if reader.fieldnames is None:
-                print(f"ERROR: {args.csv} is empty", file=sys.stderr)
-                sys.exit(1)
-            missing = required - set(reader.fieldnames)
-            if missing:
-                cols = ", ".join(sorted(missing))
-                print(
-                    f"ERROR: CSV missing columns: {cols}",
-                    file=sys.stderr,
-                )
-                sys.exit(1)
+        required = {
+            "started_at",
+            "completed_at",
+            "result",
+        }
+        if reader.fieldnames is None:
+            print(f"ERROR: {args.csv} is empty", file=sys.stderr)
+            sys.exit(1)
+        missing = required - set(reader.fieldnames)
+        assert len(missing) == 0, "Required CSV columns need to be present, missing: {', '.join(sorted(missing))}"
 
-            rows = list(reader)
-    except FileNotFoundError:
-        print(f"ERROR: File not found: {args.csv}", file=sys.stderr)
-        sys.exit(1)
+        rows = list(reader)
 
     if not rows:
-        print(f"ERROR: {args.csv} has no data rows", file=sys.stderr)
-        sys.exit(1)
+        raise Exception(f"File {args.csv} has no data rows")
 
     passed_durations = []
     failed_durations = []
@@ -107,11 +95,7 @@ def main():
             started = parse_datetime(row["started_at"])
             completed = parse_datetime(row["completed_at"])
         except (ValueError, KeyError) as e:
-            print(
-                f"ERROR: Bad datetime on CSV line {i}: {e}",
-                file=sys.stderr,
-            )
-            sys.exit(1)
+            raise Exception(f"Bad datetime on CSV line {i}: {e}")
 
         duration = (completed - started).total_seconds()
         result = row["result"]
@@ -135,10 +119,7 @@ def main():
     print(f"\n=== Overall: {total} runs ===")
     print(f"  Start: {experiment_start.strftime('%Y-%m-%d %H:%M:%S UTC')}")
     print(f"  End:   {experiment_end.strftime('%Y-%m-%d %H:%M:%S UTC')}")
-    print(
-        f"  Duration: {experiment_duration:.0f}s"
-        f"  ({human_duration(experiment_duration)})"
-    )
+    print(f"  Duration: {experiment_duration:.0f}s  ({human_duration(experiment_duration)})")
 
 
 if __name__ == "__main__":
