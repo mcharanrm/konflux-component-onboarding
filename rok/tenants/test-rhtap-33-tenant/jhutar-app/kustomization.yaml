@@ -50,6 +50,18 @@ patches:
       - op: replace
         path: /spec/application
         value: jhutar-app
+  - target:
+      kind: IntegrationTestScenario
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: jhutar-app-its
+      - op: replace
+        path: /metadata/namespace
+        value: test-rhtap-33-tenant
+      - op: replace
+        path: /spec/application
+        value: jhutar-app
 
 resources:
   - ../../../../create-konflux-manifests/overlays/container
