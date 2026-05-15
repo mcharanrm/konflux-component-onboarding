@@ -51,6 +51,18 @@ patches:
       - op: replace
         path: /spec/application
         value: {{ kflux_data.knflux_app_name }}
+  - target:
+      kind: IntegrationTestScenario
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: {{ kflux_data.knflux_app_name }}-its
+      - op: replace
+        path: /metadata/namespace
+        value: {{ kflux_data.knflux_tenant_name }}
+      - op: replace
+        path: /spec/application
+        value: {{ kflux_data.knflux_app_name }}
 {% endif %}
 
 resources:

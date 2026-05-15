@@ -1,0 +1,20 @@
+---
+apiVersion: appstudio.redhat.com/v1beta2
+kind: IntegrationTestScenario
+metadata:
+  name: app-its
+  namespace: konflux-tenant
+spec:
+  application: app
+  contexts:
+    - description: Application testing
+      name: application
+  resolverRef:
+    resolver: git
+    params:
+      - name: url
+        value: https://github.com/konflux-ci/integration-examples
+      - name: revision
+        value: main
+      - name: pathInRepo
+        value: pipelines/integration_pipeline_pass.yaml
