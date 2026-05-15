@@ -213,6 +213,12 @@ if [[ "$chart_height" -lt 20 ]]; then
     chart_height=20
 fi
 
+PNG_FILE="${CSV_FILE%.csv}.png"
+png_height=$((index * 10 + 200))
+if [[ "$png_height" -lt 600 ]]; then
+    png_height=600
+fi
+
 cat > "$tmpgp" <<GNUPLOT
 set terminal dumb size 120 $chart_height
 set xdata time
@@ -224,6 +230,12 @@ set yrange [0:$((index + 1))]
 set grid xtics
 set style arrow 1 head filled size screen 0.008,15 lw 2
 plot "$tmpdata" using 1:2:3:4 with vectors arrowstyle 1 notitle
+
+set terminal pngcairo size 1200,$png_height font "monospace,10"
+set output "$PNG_FILE"
+set style arrow 1 head filled size screen 0.008,15 lw 2
+replot
 GNUPLOT
 
 gnuplot "$tmpgp"
+echo -e "PNG chart saved to ${BOLD}${PNG_FILE}${RESET}"
