@@ -38,5 +38,5 @@ patches:
         value: https://github.com/mcharanrm/example-rok-libecpg-2261.git
 
 resources:
-  - ../../../../create-konflux-manifests/base
+  - ../../../../create-konflux-manifests/overlays/package
   - konflux-perf-scale-release-plan.yaml

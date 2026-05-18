@@ -1,6 +1,6 @@
 ---
 starts_from: 1
-ends_at: 10
+ends_at: 100
 repository_name_prefix: "example-repo-"
 application_name_prefix: "jhutar-app"
 component_name_prefix: "jhutar-comp"
@@ -8,10 +8,15 @@ test_scenario: "rok"
 github_org: "jhutar"
 dockerfile_url: "Dockerfile"
 git_revision: "main"
-source_repo_dir: "sample-repo"
+source_git_repo: "git@github.com:jhutar/example-repo-1.git"
+component_overlay: "container"
 
 github_api:
   base_url: "https://api.github.com"
+  get_repository:
+    path: "/repos/jhutar"
+    method: "GET"
+    expected_status: 200
   create_repository:
     path: "/user/repos"
     method: "POST"
@@ -22,5 +27,9 @@ github_api:
     add:
       method: "PUT"
       expected_status: 204
+  create_pull_request:
+    path: "/repos/jhutar"
+    method: "POST"
+    expected_status: 201
   retries: 1
   delay_seconds: 1

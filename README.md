@@ -1,5 +1,47 @@
 # konflux-component-onboarding
 
+## Workflow for rebuild-all
+
+Check variables override in `vars/overrides_for_rebuild_all.yaml` and assuming you are good with them, you can continue:
+
+Create empty GitHub repos:
+
+```
+ansible-playbook playbooks/create-github-repositories.yaml -e @vars/overrides_for_rebuild_all.yaml
+```
+
+Create Konflux manifests (Applications, Components):
+
+```
+ansible-playbook playbooks/create-kflux-resource-manifests.yaml -e @vars/overrides_for_rebuild_all.yaml
+```
+
+Push template git repo to these repos:
+
+```
+ansible-playbook playbooks/push-to-github-repositories.yaml -e @vars/overrides_for_rebuild_all.yaml
+```
+
+Onboard the components to Konflux:
+
+```
+for d in rok/tenants/test-rhtap-*-tenant/jhutar-app/; do
+    oc apply -k "$d"
+done
+```
+
+Create PR with on-pull pipeline to trigger build:
+
+```
+ansible-playbook playbooks/create-trigger-build-pipeline.yaml -e @vars/overrides_for_rebuild_all.yaml
+```
+
+Collect basic stats about the runs:
+
+```
+./check-konflux-prs.sh 1 100
+```
+
 ## Linting and formatting
 
 ### yamllint

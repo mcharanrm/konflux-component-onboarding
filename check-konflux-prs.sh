@@ -54,7 +54,6 @@ fi
 
 # CSV setup
 CSV_FILE="results.csv"
-CHECK_NAME="Konflux Staging / example-rok-libecpg-on-pull-request"
 
 if [[ ! -f "$CSV_FILE" ]]; then
     echo "repo,pr_url,pipelinerun,started_at,completed_at,result" > "$CSV_FILE"
@@ -67,9 +66,19 @@ check_finished=0
 check_passed=0
 skipped=0
 
+# === Container scenario ===
+REPO_BASE="jhutar/example-repo-"
+CHECK_NAME="Konflux Staging / jhutar-comp-on-pull-request"
+
+# === Package scenario ===
+# REPO_BASE="mcharanrm/example-rok-libecpg-"
+# CHECK_NAME="Konflux Staging / example-rok-libecpg-on-pull-request"
+
+
 # Main loop
 for i in $(seq "$start" "$end"); do
-    repo="mcharanrm/example-rok-libecpg-$i"
+    repo="${REPO_BASE}$i"
+
     total=$((total + 1))
 
     echo -e "${BOLD}[$i] $repo${RESET}"
@@ -204,6 +213,12 @@ if [[ "$chart_height" -lt 20 ]]; then
     chart_height=20
 fi
 
+PNG_FILE="${CSV_FILE%.csv}.png"
+png_height=$((index * 10 + 200))
+if [[ "$png_height" -lt 600 ]]; then
+    png_height=600
+fi
+
 cat > "$tmpgp" <<GNUPLOT
 set terminal dumb size 120 $chart_height
 set xdata time
@@ -215,6 +230,12 @@ set yrange [0:$((index + 1))]
 set grid xtics
 set style arrow 1 head filled size screen 0.008,15 lw 2
 plot "$tmpdata" using 1:2:3:4 with vectors arrowstyle 1 notitle
+
+set terminal pngcairo size 1200,$png_height font "monospace,10"
+set output "$PNG_FILE"
+set style arrow 1 head filled size screen 0.008,15 lw 2
+replot
 GNUPLOT
 
 gnuplot "$tmpgp"
+echo -e "PNG chart saved to ${BOLD}${PNG_FILE}${RESET}"
