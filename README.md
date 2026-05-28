@@ -26,7 +26,10 @@ Onboard the components to Konflux:
 
 ```
 for d in rok/tenants/test-rhtap-*-tenant/jhutar-app/; do
+    n="$( echo "$d" | cut -d "/" -f 3 )"
+    echo "# $n"
     oc apply -k "$d"
+    oc -n "$n" secrets link --for=mount loadtest-serviceaccount rhtap-perf-test-oci-storage-robot-jhutar-pull-secret
 done
 ```
 
