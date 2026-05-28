@@ -2,119 +2,12 @@
 apiVersion: appstudio.redhat.com/v1alpha1
 kind: ReleasePlan
 metadata:
-  name: konflux-container-release-plan-1
+  name: jhutar-app-rp
   namespace: konflux-tenant
   labels:
-    release.appstudio.openshift.io/auto-release: 'false'
+    release.appstudio.openshift.io/auto-release: 'true'
     release.appstudio.openshift.io/standing-attribution: 'true'
 spec:
   application: app
-  target: managed-release-team-tenant
----
-apiVersion: appstudio.redhat.com/v1alpha1
-kind: ReleasePlan
-metadata:
-  name: konflux-container-release-plan-2
-  namespace: konflux-tenant
-  labels:
-    release.appstudio.openshift.io/auto-release: 'false'
-    release.appstudio.openshift.io/standing-attribution: 'true'
-spec:
-  application: app
-  target: managed-release-team-tenant
----
-apiVersion: appstudio.redhat.com/v1alpha1
-kind: ReleasePlan
-metadata:
-  name: konflux-container-release-plan-3
-  namespace: konflux-tenant
-  labels:
-    release.appstudio.openshift.io/auto-release: 'false'
-    release.appstudio.openshift.io/standing-attribution: 'true'
-spec:
-  application: app
-  target: managed-release-team-tenant
----
-apiVersion: appstudio.redhat.com/v1alpha1
-kind: ReleasePlan
-metadata:
-  name: konflux-container-release-plan-4
-  namespace: konflux-tenant
-  labels:
-    release.appstudio.openshift.io/auto-release: 'false'
-    release.appstudio.openshift.io/standing-attribution: 'true'
-spec:
-  application: app
-  target: managed-release-team-tenant
----
-apiVersion: appstudio.redhat.com/v1alpha1
-kind: ReleasePlan
-metadata:
-  name: konflux-container-release-plan-5
-  namespace: konflux-tenant
-  labels:
-    release.appstudio.openshift.io/auto-release: 'false'
-    release.appstudio.openshift.io/standing-attribution: 'true'
-spec:
-  application: app
-  target: managed-release-team-tenant
----
-apiVersion: appstudio.redhat.com/v1alpha1
-kind: ReleasePlan
-metadata:
-  name: konflux-container-release-plan-6
-  namespace: konflux-tenant
-  labels:
-    release.appstudio.openshift.io/auto-release: 'false'
-    release.appstudio.openshift.io/standing-attribution: 'true'
-spec:
-  application: app
-  target: managed-release-team-tenant
----
-apiVersion: appstudio.redhat.com/v1alpha1
-kind: ReleasePlan
-metadata:
-  name: konflux-container-release-plan-7
-  namespace: konflux-tenant
-  labels:
-    release.appstudio.openshift.io/auto-release: 'false'
-    release.appstudio.openshift.io/standing-attribution: 'true'
-spec:
-  application: app
-  target: managed-release-team-tenant
----
-apiVersion: appstudio.redhat.com/v1alpha1
-kind: ReleasePlan
-metadata:
-  name: konflux-container-release-plan-8
-  namespace: konflux-tenant
-  labels:
-    release.appstudio.openshift.io/auto-release: 'false'
-    release.appstudio.openshift.io/standing-attribution: 'true'
-spec:
-  application: app
-  target: managed-release-team-tenant
----
-apiVersion: appstudio.redhat.com/v1alpha1
-kind: ReleasePlan
-metadata:
-  name: konflux-container-release-plan-9
-  namespace: konflux-tenant
-  labels:
-    release.appstudio.openshift.io/auto-release: 'false'
-    release.appstudio.openshift.io/standing-attribution: 'true'
-spec:
-  application: app
-  target: managed-release-team-tenant
----
-apiVersion: appstudio.redhat.com/v1alpha1
-kind: ReleasePlan
-metadata:
-  name: konflux-container-release-plan-10
-  namespace: konflux-tenant
-  labels:
-    release.appstudio.openshift.io/auto-release: 'false'
-    release.appstudio.openshift.io/standing-attribution: 'true'
-spec:
-  application: app
-  target: managed-release-team-tenant
+  releaseGracePeriodDays: 7
+  target: konflux-tenant

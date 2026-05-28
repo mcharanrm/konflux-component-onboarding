@@ -1,2 +1,3 @@
 /build-pipelines-workspace/
 /scratch-space
+create-konflux-manifests/overlays/container/push-secret.yaml

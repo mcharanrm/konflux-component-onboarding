@@ -51,6 +51,9 @@ patches:
       - op: replace
         path: /spec/application
         value: {{ kflux_data.knflux_app_name }}
+      - op: replace
+        path: /spec/target
+        value: {{ kflux_data.knflux_tenant_name }}
   - target:
       kind: IntegrationTestScenario
     patch: |-
@@ -63,6 +66,31 @@ patches:
       - op: replace
         path: /spec/application
         value: {{ kflux_data.knflux_app_name }}
+  - target:
+      kind: ReleasePlanAdmission
+    patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: {{ kflux_data.knflux_tenant_name }}
+      - op: replace
+        path: /spec/applications/0
+        value: {{ kflux_data.knflux_app_name }}
+      - op: replace
+        path: /spec/origin
+        value: {{ kflux_data.knflux_tenant_name }}
+  - target:
+      kind: EnterpriseContractPolicy
+    patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: {{ kflux_data.knflux_tenant_name }}
+  - target:
+      kind: Secret
+      name: rhtap-perf-test-oci-storage-robot-jhutar-pull-secret
+    patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: {{ kflux_data.knflux_tenant_name }}
 {% endif %}
 
 resources:

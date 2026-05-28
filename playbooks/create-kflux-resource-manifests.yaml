@@ -21,6 +21,28 @@
       - ansible.builtin.include_tasks:
           file: ../generate-resource-names/tasks.yaml
 
+    # copy push secret to container overlay (not committed to git)
+    - block:
+        - name: read push secret source file
+          ansible.builtin.slurp:
+            src: "{{ push_secret_source_path }}"
+          register: push_secret_raw
+
+        - name: write push secret with namespace placeholder to overlay
+          ansible.builtin.copy:
+            content: |
+              ---
+              apiVersion: v1
+              kind: Secret
+              metadata:
+                name: {{ (push_secret_raw.content | b64decode | from_yaml).metadata.name }}
+                namespace: konflux-tenant
+              data:
+                .dockerconfigjson: {{ (push_secret_raw.content | b64decode | from_yaml).data['.dockerconfigjson'] }}
+              type: kubernetes.io/dockerconfigjson
+            dest: "../create-konflux-manifests/overlays/container/push-secret.yaml"
+      when: component_overlay == 'container' and push_secret_source_path is defined
+
     # run the tasks required to create repositories and install Konflux GitHub app to the repositories
     - ansible.builtin.include_tasks:
         file: ../create-konflux-manifests/tasks.yaml

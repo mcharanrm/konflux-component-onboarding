@@ -1,0 +1,24 @@
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: ReleasePlanAdmission
+metadata:
+  name: jhutar-app-rpa
+  namespace: konflux-tenant
+spec:
+  applications:
+    - app
+  origin: konflux-tenant
+  pipeline:
+    pipelineRef:
+      ociStorage: quay.io/rhtap-perf-test/perf-release-service-trusted-artifacts-jhutar
+      params:
+        - name: url
+          value: https://github.com/konflux-ci/release-service-catalog.git
+        - name: revision
+          value: production
+        - name: pathInRepo
+          value: pipelines/managed/e2e/e2e.yaml
+      resolver: git
+    serviceAccountName: konflux-bot-0
+    timeouts: {}
+  policy: tmp-onboard-policy

@@ -50,6 +50,9 @@ patches:
       - op: replace
         path: /spec/application
         value: jhutar-app
+      - op: replace
+        path: /spec/target
+        value: test-rhtap-84-tenant
   - target:
       kind: IntegrationTestScenario
     patch: |-
@@ -62,6 +65,31 @@ patches:
       - op: replace
         path: /spec/application
         value: jhutar-app
+  - target:
+      kind: ReleasePlanAdmission
+    patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: test-rhtap-84-tenant
+      - op: replace
+        path: /spec/applications/0
+        value: jhutar-app
+      - op: replace
+        path: /spec/origin
+        value: test-rhtap-84-tenant
+  - target:
+      kind: EnterpriseContractPolicy
+    patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: test-rhtap-84-tenant
+  - target:
+      kind: Secret
+      name: rhtap-perf-test-oci-storage-robot-jhutar-pull-secret
+    patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: test-rhtap-84-tenant
 
 resources:
   - ../../../../create-konflux-manifests/overlays/container

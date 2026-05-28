@@ -1,0 +1,53 @@
+---
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: EnterpriseContractPolicy
+metadata:
+  name: tmp-onboard-policy
+  namespace: konflux-tenant
+spec:
+  description: Temporary policy to streamline teams to onboard their integration tests.
+  publicKey: k8s://openshift-pipelines/public-key
+  sources:
+    - config:
+        exclude:
+          - attestation_task_bundle.task_ref_bundles_acceptable
+          - base_image_registries.base_image_permitted
+          - hermetic_task
+          - tasks.required_tasks_found
+          - test.no_skipped_tests
+          - attestation_task_bundle.task_ref_bundles_current
+          - cve.deprecated_cve_result_name
+          - tasks.required_task_unacceptable_found
+          - test.no_test_warnings
+          - schedule.weekday_restriction
+          - cve.cve_blockers
+          - base_image_registries.base_image_info_found
+          - cve.cve_results_found
+          - labels.required_labels
+        include:
+          - "@redhat"
+      data:
+        - oci::quay.io/konflux-ci/tekton-catalog/data-acceptable-bundles:latest
+        - oci::quay.io/konflux-ci/konflux-vanguard/data-acceptable-bundles:latest
+        - github.com/release-engineering/rhtap-ec-policy//data
+        - oci::quay.io/konflux-ci/integration-service-catalog/data-acceptable-bundles:latest
+      name: Release Policies
+      policy:
+        - oci::quay.io/conforma/release-policy:konflux
+      ruleData:
+        allowed_registry_prefixes:
+          - registry.access.redhat.com/
+          - registry.redhat.io/
+          - brew.registry.redhat.io/rh-osbs/openshift-golang-builder
+          - registry.stage.redhat.io/
+        allowed_olm_image_registry_prefixes:
+          - registry.access.redhat.com/
+          - registry.redhat.io/
+          - brew.registry.redhat.io/rh-osbs/openshift-golang-builder
+          - quay.io/konflux-ci/yq
+          - quay.io/konflux-ci/bazel5-ubi8
+          - quay.io/konflux-ci/bazel6-ubi9
+          - quay.io/konflux-ci/yarn3-nodejs20-ubi9-minimal
+          - quay.io/konflux-ci/yarn4-nodejs22-ubi9-minimal
+          - brew.registry.redhat.io/rh-osbs/rhacm2-nodejs-parent
+          - registry.stage.redhat.io/

@@ -10,6 +10,7 @@ dockerfile_url: "Dockerfile"
 git_revision: "main"
 source_git_repo: "git@github.com:jhutar/example-repo-1.git"
 component_overlay: "container"
+push_secret_source_path: "~/Downloads/rhtap-perf-test-oci-storage-robot-jhutar-secret.yml"
 
 github_api:
   base_url: "https://api.github.com"
