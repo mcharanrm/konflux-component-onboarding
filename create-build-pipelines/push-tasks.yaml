@@ -1,0 +1,52 @@
+---
+- name: show the current iteration of the loop at the beginning
+  ansible.builtin.debug:
+    msg: "start triggering push build for {{ kflux_data.git_repo_name }}"
+
+- name: extract source repo name
+  ansible.builtin.set_fact:
+    source_repo_name: "{{ source_git_repo | basename | split('.') | first }}"
+
+- name: check whether source repo is already cloned
+  ansible.builtin.stat:
+    path: "../{{ git_workspace_dir }}/{{ source_repo_name }}"
+  register: source_repo_status
+
+- name: clone source repository
+  ansible.builtin.git:
+    repo: "{{ source_git_repo }}"
+    dest: "../{{ git_workspace_dir }}/{{ source_repo_name }}"
+    single_branch: true
+    version: "{{ git_revision }}"
+  when: not source_repo_status.stat.exists
+
+- name: get details about the remote repository
+  ansible.builtin.uri:
+    url: "{{ gh_api.base_url + gh_api.get_repository.path }}/{{ kflux_data.git_repo_name }}"
+    method: "{{ gh_api.get_repository.method }}"
+    headers:
+      accept: application/vnd.github+json
+      Authorization: "Bearer {{ gh_pat.create_repositories }}"
+    status_code: "{{ gh_api.get_repository.expected_status | int }}"
+  ignore_errors: true
+  retries: "{{ gh_api.retries }}"
+  delay: "{{ gh_api.delay_seconds }}"
+  until: (get_repository_response.status | int) == (gh_api.get_repository.expected_status | int)
+  register: get_repository_response
+
+- name: commit insignificant change and push to main
+  ansible.builtin.shell: |
+    cd ../{{ git_workspace_dir }}/{{ source_repo_name }}
+    git remote remove {{ kflux_data.git_repo_name }} || true
+    git remote add {{ kflux_data.git_repo_name }} {{ get_repository_response.json.ssh_url }}
+    git fetch {{ kflux_data.git_repo_name }} {{ git_revision }}
+    git checkout {{ git_revision }}
+    git reset --hard {{ kflux_data.git_repo_name }}/{{ git_revision }}
+    date --utc -Ins >> README.md
+    git add README.md
+    git commit -m "Trigger on-push build"
+    git push {{ kflux_data.git_repo_name }} {{ git_revision }}
+
+- name: show the iteration of the loop at the end
+  ansible.builtin.debug:
+    msg: "successfully triggered push build for {{ kflux_data.git_repo_name }}"
