@@ -19,6 +19,6 @@ spec:
         - name: pathInRepo
           value: pipelines/managed/e2e/e2e.yaml
       resolver: git
-    serviceAccountName: konflux-bot-0
+    serviceAccountName: loadtest-serviceaccount
     timeouts: {}
   policy: tmp-onboard-policy

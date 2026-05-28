@@ -56,7 +56,12 @@
 - name: render build pipeline templates
   ansible.builtin.template:
     src: ../create-build-pipelines/templates/{{ component_overlay }}/build-pipeline.yaml.j2
-    dest: "../{{ git_workspace_dir }}/{{ source_repo_name }}/.tekton/{{ kflux_data.git_repo_name }}-pull-request.yaml"
+    dest: "../{{ git_workspace_dir }}/{{ source_repo_name }}/.tekton/{{ kflux_data.git_repo_name }}-{{ pipeline_type }}.yaml"
+  loop:
+    - pull-request
+    - push
+  loop_control:
+    loop_var: pipeline_type
 
 - name: create feature branch and commit changes
   ansible.builtin.shell: |

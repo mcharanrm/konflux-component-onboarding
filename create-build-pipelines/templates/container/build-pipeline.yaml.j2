@@ -5,18 +5,20 @@ metadata:
   annotations:
     build.appstudio.openshift.io/repo: {{'"{{repo_url}}'}}?rev={{'{{revision}}"'}}
     build.appstudio.redhat.com/commit_sha: {{"'{{revision}}'"}}
+{% if pipeline_type == 'pull-request' %}
     build.appstudio.redhat.com/pull_request_number: {{"'{{pull_request_number}}'"}}
+{% endif %}
     build.appstudio.redhat.com/target_branch: {{"'{{target_branch}}'"}}
     pipelinesascode.tekton.dev/cancel-in-progress: "true"
     pipelinesascode.tekton.dev/max-keep-runs: "3"
-    pipelinesascode.tekton.dev/on-cel-expression: event == "pull_request" && target_branch
+    pipelinesascode.tekton.dev/on-cel-expression: event == "{{ 'pull_request' if pipeline_type == 'pull-request' else 'push' }}" && target_branch
       == "main"
   creationTimestamp: null
   labels:
     appstudio.openshift.io/application: "{{ kflux_data.knflux_app_name }}"
     appstudio.openshift.io/component: "{{ kflux_data.knflux_comp_name }}"
     pipelines.appstudio.openshift.io/type: build
-  name: "{{ kflux_data.knflux_comp_name }}-on-pull-request"
+  name: "{{ kflux_data.knflux_comp_name }}-on-{{ pipeline_type }}"
   namespace: "{{ kflux_data.knflux_tenant_name }}"
 spec:
   timeouts:
@@ -27,9 +29,11 @@ spec:
   - name: revision
     value: {{'"{{ revision }}"'}}
   - name: output-image
-    value: quay.io/redhat-user-workloads-stage/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_comp_name }}:on-pr-{{'{{revision}}'}}
+    value: quay.io/redhat-user-workloads-stage/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_comp_name }}:{{ 'on-pr-{{revision}}' if pipeline_type == 'pull-request' else '{{revision}}' }}
+{% if pipeline_type == 'pull-request' %}
   - name: image-expires-after
     value: 5d
+{% endif %}
   - name: build-platforms
     value:
     - linux/x86_64
