@@ -42,7 +42,7 @@ ansible-playbook playbooks/create-trigger-build-pipeline.yaml -e @vars/overrides
 Merge these PRs:
 
 ```
-for i in {1..100}; do gh pr merge --merge --delete-branch --repo jhutar/example-repo-$i; done
+for i in {1..100}; do gh pr merge konflux-example-repo-$i --rebase --delete-branch --repo jhutar/example-repo-$i; done
 ```
 
 Or trigger on-push build directly (requires on-push pipeline in the repo):
