@@ -39,6 +39,18 @@ Create PR with on-pull pipeline to trigger build:
 ansible-playbook playbooks/create-trigger-build-pipeline.yaml -e @vars/overrides_for_rebuild_all.yaml
 ```
 
+Merge these PRs:
+
+```
+for i in {1..100}; do gh pr merge --merge --delete-branch --repo jhutar/example-repo-$i; done
+```
+
+Or trigger on-push build directly (requires on-push pipeline in the repo):
+
+```
+ansible-playbook playbooks/trigger-push-build.yaml -e @vars/overrides_for_rebuild_all.yaml
+```
+
 Collect basic stats about the runs:
 
 ```
