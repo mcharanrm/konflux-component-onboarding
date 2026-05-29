@@ -8,15 +8,16 @@ end=""
 after_time=""
 
 usage() {
-    echo "Usage: $0 --action <on-pull|on-push|release> --start <start> --end <end> [--after <timestamp>]"
+    echo "Usage: $0 --action <on-pull|on-push|release|test> --start <start> --end <end> [--after <timestamp>]"
     echo "Example: $0 --action on-push --start 1 --end 10"
     echo "Example: $0 --action release --start 1 --end 10 --after \"2026-05-29T10:39:56Z\""
+    echo "Example: $0 --action test --start 1 --end 10 --after \"2026-05-29T10:39:56Z\""
     echo ""
     echo "Options:"
-    echo "  -a, --action  Action to check (on-pull, on-push, or release)"
+    echo "  -a, --action  Action to check (on-pull, on-push, release, or test)"
     echo "  -s, --start   Start index of the repository range"
     echo "  -e, --end     End index of the repository range"
-    echo "  --after       Filter for pipelineruns after this UTC timestamp (release action only)"
+    echo "  --after       Filter for pipelineruns after this UTC timestamp (release/test action only)"
     echo "                Defaults to content of 'prs_start_time' file if it exists."
     echo "  -h, --help    Show this help message"
     exit 1
@@ -57,8 +58,8 @@ if [[ -z "$action" ]]; then
     usage
 fi
 
-if [[ "$action" != "on-pull" && "$action" != "on-push" && "$action" != "release" ]]; then
-    echo "ERROR: --action must be 'on-pull', 'on-push', or 'release'."
+if [[ "$action" != "on-pull" && "$action" != "on-push" && "$action" != "release" && "$action" != "test" ]]; then
+    echo "ERROR: --action must be 'on-pull', 'on-push', 'release', or 'test'."
     usage
 fi
 
@@ -77,13 +78,13 @@ if [[ "$start" -gt "$end" ]]; then
     exit 1
 fi
 
-# Load after_time from file if not provided for release action
-if [[ "$action" == "release" && -z "$after_time" ]]; then
+# Load after_time from file if not provided for release/test actions
+if [[ ( "$action" == "release" || "$action" == "test" ) && -z "$after_time" ]]; then
     if [[ -f "prs_start_time" ]]; then
         after_time=$(cat prs_start_time)
         echo "Using start time from prs_start_time: $after_time"
     else
-        echo "ERROR: --after or prs_start_time file is required for release action."
+        echo "ERROR: --after or prs_start_time file is required for $action action."
         exit 1
     fi
 fi
@@ -104,8 +105,8 @@ if ! command -v gnuplot &>/dev/null; then
     exit 1
 fi
 
-if [[ "$action" == "release" ]] && ! command -v oc &>/dev/null; then
-    echo "ERROR: 'oc' (and 'oc ka' plugin) is required for release action."
+if [[ "$action" == "release" || "$action" == "test" ]] && ! command -v oc &>/dev/null; then
+    echo "ERROR: 'oc' (and 'oc ka' plugin) is required for release/test action."
     exit 1
 fi
 
@@ -141,6 +142,8 @@ skipped=0
 # === Scenario configuration ===
 REPO_BASE="jhutar/example-repo-"
 APP_NAME="jhutar-app"
+COMP_NAME="jhutar-comp"
+TEST_SCENARIO="jhutar-app-its"
 TENANT_PREFIX="test-rhtap-"
 
 if [[ "$action" == "on-pull" ]]; then
@@ -279,6 +282,50 @@ fetch_release() {
     return 0
 }
 
+fetch_test() {
+    local index=$1
+    local repo_full="${REPO_BASE}${index}"
+    local repo_name="${repo_full##*/}"
+    local namespace="${TENANT_PREFIX}${index}-tenant"
+
+    echo "  Checking integration test in $namespace..."
+
+    # Use oc ka to get the pipelinerun
+    plr_json=$(oc ka get -n "$namespace" pipelinerun --selector "appstudio.openshift.io/application=$APP_NAME,appstudio.openshift.io/component=$COMP_NAME,pac.test.appstudio.openshift.io/url-repository=$repo_name,pipelines.appstudio.openshift.io/type=test,test.appstudio.openshift.io/scenario=$TEST_SCENARIO" --limit 1 --after "$after_time" -o json 2>/dev/null) || {
+        echo -e "  ${RED}ERROR: Failed to get Test PipelineRuns in $namespace${RESET}"
+        return 1
+    }
+
+    count=$(echo "$plr_json" | jq '.items | length')
+    if [[ "$count" -eq 0 ]]; then
+        echo -e "  ${RED}Test PipelineRun not found (after $after_time). Skipping.${RESET}"
+        return 1
+    fi
+
+    item=$(echo "$plr_json" | jq '.items[0]')
+    pipelinerun=$(echo "$item" | jq -r '.metadata.name')
+    started_at=$(echo "$item" | jq -r '.status.startTime // empty')
+    completed_at=$(echo "$item" | jq -r '.status.completionTime // empty')
+
+    if [[ -z "$started_at" || -z "$completed_at" ]]; then
+        check_bucket="pending"
+        return 0
+    fi
+
+    # Determine result
+    succeeded=$(echo "$item" | jq -r '.status.conditions[] | select(.type == "Succeeded") | .status')
+    if [[ "$succeeded" == "True" ]]; then
+        check_bucket="pass"
+    else
+        check_bucket="fail"
+    fi
+
+    pr_url="N/A"
+    link="oc ka get -n $namespace pipelinerun $pipelinerun"
+
+    return 0
+}
+
 # Main loop
 for i in $(seq "$start" "$end"); do
     repo="${REPO_BASE}$i"
@@ -321,6 +368,8 @@ for i in $(seq "$start" "$end"); do
         fetch_on_push "$repo" || continue
     elif [[ "$action" == "release" ]]; then
         fetch_release "$i" || continue
+    elif [[ "$action" == "test" ]]; then
+        fetch_test "$i" || continue
     fi
 
     # Check if finished
@@ -331,8 +380,8 @@ for i in $(seq "$start" "$end"); do
 
     check_finished=$((check_finished + 1))
 
-    # For release action, pipelinerun is already extracted
-    if [[ "$action" != "release" ]]; then
+    # For release/test actions, pipelinerun is already extracted
+    if [[ "$action" != "release" && "$action" != "test" ]]; then
         pipelinerun=$(echo "$link" | grep -oP '[^/]+$')
     fi
 
