@@ -90,18 +90,15 @@ set grid xtics ytics
 
 set title "Konflux Pipeline Timeline: Build (Blue) -> Test (Green) -> Release (Red)"
 
-# Line styles for the 3 stages
-set style line 1 lc rgb "#0000FF" lw 2 # Build: Blue
-set style line 2 lc rgb "#00FF00" lw 2 # Test: Green
-set style line 3 lc rgb "#FF0000" lw 2 # Release: Red
-
-# Arrow style
-set style arrow 1 head filled size screen 0.005,15 lw 2
+# Arrow styles for the 3 stages
+set style arrow 1 head filled size screen 0.005,15 lw 2 lc rgb "#0000FF" # Build: Blue
+set style arrow 2 head filled size screen 0.005,15 lw 2 lc rgb "#00FF00" # Test: Green
+set style arrow 3 head filled size screen 0.005,15 lw 2 lc rgb "#FF0000" # Release: Red
 
 # Plot each stage by filtering the 5th column (color_index)
-plot "$tmpdata" using 1:2:3:4:(column(5)==1 ? 1 : 1/0) with vectors as 1 lc 1 title "Build", \
-     ""         using 1:2:3:4:(column(5)==2 ? 1 : 1/0) with vectors as 1 lc 2 title "Test", \
-     ""         using 1:2:3:4:(column(5)==3 ? 1 : 1/0) with vectors as 1 lc 3 title "Release"
+plot "$tmpdata" using 1:($5==1?$2:1/0):3:4 with vectors as 1 title "Build", \
+     ""         using 1:($5==2?$2:1/0):3:4 with vectors as 2 title "Test", \
+     ""         using 1:($5==3?$2:1/0):3:4 with vectors as 3 title "Release"
 GNUPLOT
 
 gnuplot "$tmpgp"
