@@ -16,9 +16,8 @@
   ansible.builtin.git:
     repo: "{{ source_git_repo }}"
     dest: "../{{ git_workspace_dir }}/{{ source_repo_name }}"
-    single_branch: true
     version: "{{ git_revision }}"
-  when: not source_repo_status.stat.exists
+    force: true
 
 - name: check that {{ dockerfile_url }} exists in source repo
   ansible.builtin.stat:
@@ -29,10 +28,16 @@
 - name: push source repo to {{ kflux_data.git_repo_name }}
   ansible.builtin.shell: |
     cd ../{{ git_workspace_dir }}/{{ source_repo_name }}
-    git branch -M {{ git_revision }}
+    # Ensure workspace is clean and reset to pristine source revision
+    git remote remove source-origin || true
+    git remote add source-origin {{ source_git_repo }}
+    git fetch source-origin {{ git_revision }}
+    git clean -fd
+    git reset --hard source-origin/{{ git_revision }}
+    # Setup target remote
     git remote remove origin || true
     git remote add origin git@github.com:{{ github_org }}/{{ kflux_data.git_repo_name }}.git
-    git push -u origin {{ git_revision }}
+    git push -f -u origin {{ git_revision }}
 
 - name: show the iteration of the loop at the end
   ansible.builtin.debug:

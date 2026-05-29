@@ -16,9 +16,8 @@
   ansible.builtin.git:
     repo: "{{ source_git_repo }}"
     dest: "../{{ git_workspace_dir }}/{{ source_repo_name }}"
-    single_branch: true
     version: "{{ git_revision }}"
-  when: not source_repo_status.stat.exists
+    force: true
 
 - name: get details about the remote repository
   ansible.builtin.uri:
@@ -34,14 +33,24 @@
   until: (get_repository_response.status | int) == (gh_api.get_repository.expected_status | int)
   register: get_repository_response
 
+- name: prepare pristine workspace
+  ansible.builtin.shell: |
+    set -e
+    cd ../{{ git_workspace_dir }}/{{ source_repo_name }}
+    git remote remove source-origin || true
+    git remote add source-origin {{ source_git_repo }}
+    git fetch source-origin {{ git_revision }}
+    git clean -fd
+    git reset --hard source-origin/{{ git_revision }}
+    git checkout {{ git_revision }}
+
 - name: commit insignificant change and push to main
   ansible.builtin.shell: |
+    set -e
     cd ../{{ git_workspace_dir }}/{{ source_repo_name }}
+    # Setup target remote
     git remote remove {{ kflux_data.git_repo_name }} || true
     git remote add {{ kflux_data.git_repo_name }} {{ get_repository_response.json.ssh_url }}
-    git fetch {{ kflux_data.git_repo_name }} {{ git_revision }}
-    git checkout {{ git_revision }}
-    git reset --hard {{ kflux_data.git_repo_name }}/{{ git_revision }}
     date --utc -Ins >> README.md
     git add README.md
     git commit -m "Trigger on-push build"
