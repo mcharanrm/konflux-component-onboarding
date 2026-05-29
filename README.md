@@ -32,7 +32,7 @@ Create PR with on-pull pipeline to trigger build:
 
 Collect basic stats about the runs:
 
-    ./check-on-pull-prs.sh 1 100
+    ./check-konflux-prs.sh --action on-pull --start 1 --end 100
 
 Optionally you can merge these PRs (from `konflux-example-repo-*` branch):
 
@@ -44,6 +44,10 @@ Optionally you can merge these PRs (from `konflux-example-repo-*` branch):
 and trigger on-push build directly for releases to happen:
 
     ansible-playbook playbooks/trigger-push-build.yaml -e @vars/overrides_for_rebuild_all.yaml
+
+Collect stats about on-push runs:
+
+    ./check-konflux-prs.sh --action on-push --start 1 --end 100
 
 ## Linting and formatting
 
