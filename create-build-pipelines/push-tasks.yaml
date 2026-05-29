@@ -21,8 +21,11 @@
   ansible.builtin.shell: |
     set -e
     cd ../{{ git_workspace_dir }}/{{ source_repo_name }}
+    git remote remove {{ kflux_data.git_repo_name }} || true
+    git remote add {{ kflux_data.git_repo_name }} {{ get_repository_response.json.ssh_url }}
+    git fetch {{ kflux_data.git_repo_name }} {{ git_revision }}
     git clean -fd
-    git reset --hard source-origin/{{ git_revision }}
+    git reset --hard {{ kflux_data.git_repo_name }}/{{ git_revision }}
     git checkout {{ git_revision }}
 
 - name: commit insignificant change and push to main
