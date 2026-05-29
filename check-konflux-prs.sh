@@ -221,7 +221,7 @@ fetch_on_push() {
 
     status=$(echo "$check" | jq -r '.status')
     conclusion=$(echo "$check" | jq -r '.conclusion')
-    
+
     check_state="$status"
     if [[ "$status" != "completed" ]]; then
         check_bucket="pending"
@@ -240,31 +240,31 @@ fetch_on_push() {
 fetch_release() {
     local index=$1
     local namespace="${TENANT_PREFIX}${index}-tenant"
-    
+
     echo "  Checking release in $namespace..."
-    
+
     # Use oc ka to get the pipelinerun
     plr_json=$(oc ka get -n "$namespace" pipelinerun --selector "appstudio.openshift.io/application=$APP_NAME,appstudio.openshift.io/service=release" --limit 1 --after "$after_time" -o json 2>/dev/null) || {
         echo -e "  ${RED}ERROR: Failed to get Release PipelineRuns in $namespace${RESET}"
         return 1
     }
-    
+
     count=$(echo "$plr_json" | jq '.items | length')
     if [[ "$count" -eq 0 ]]; then
         echo -e "  ${RED}Release PipelineRun not found (after $after_time). Skipping.${RESET}"
         return 1
     fi
-    
+
     item=$(echo "$plr_json" | jq '.items[0]')
     pipelinerun=$(echo "$item" | jq -r '.metadata.name')
     started_at=$(echo "$item" | jq -r '.status.startTime // empty')
     completed_at=$(echo "$item" | jq -r '.status.completionTime // empty')
-    
+
     if [[ -z "$started_at" || -z "$completed_at" ]]; then
         check_bucket="pending"
         return 0
     fi
-    
+
     # Determine result
     succeeded=$(echo "$item" | jq -r '.status.conditions[] | select(.type == "Succeeded") | .status')
     if [[ "$succeeded" == "True" ]]; then
@@ -272,10 +272,10 @@ fetch_release() {
     else
         check_bucket="fail"
     fi
-    
+
     pr_url="N/A"
     link="oc ka get -n $namespace pipelinerun $pipelinerun"
-    
+
     return 0
 }
 
@@ -384,7 +384,7 @@ trap 'rm -f "$tmpdata" "$tmpgp"' EXIT
 
 index=0
 ytics=""
-while IFS=',' read -r csv_repo csv_pr_url csv_pipelinerun csv_started csv_completed csv_result; do
+while IFS=',' read -r csv_repo _ _ csv_started csv_completed csv_result; do
     index=$((index + 1))
     start_epoch=$(date -d "$csv_started" +%s)
     end_epoch=$(date -d "$csv_completed" +%s)
