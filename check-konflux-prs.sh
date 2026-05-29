@@ -122,6 +122,94 @@ else
     CHECK_NAME="Konflux Staging / jhutar-comp-on-push"
 fi
 
+fetch_on_pull() {
+    local repo=$1
+    # Get open PRs
+    pr_json=$(gh pr list -R "$repo" --state open --json number,url 2>&1) || {
+        echo -e "  ${RED}ERROR: Failed to list PRs for $repo${RESET}"
+        return 1
+    }
+
+    pr_count=$(echo "$pr_json" | jq 'length')
+
+    if [[ "$pr_count" -ne 1 ]]; then
+        echo -e "  ${RED}ERROR: Expected 1 open PR, found $pr_count. Skipping.${RESET}"
+        return 1
+    fi
+
+    processed_items=$((processed_items + 1))
+
+    pr_number=$(echo "$pr_json" | jq -r '.[0].number')
+    pr_url=$(echo "$pr_json" | jq -r '.[0].url')
+
+    echo "  PR #$pr_number: $pr_url"
+
+    # Get checks for this PR
+    checks_json=$(gh pr checks "$pr_number" -R "$repo" --json name,state,bucket,startedAt,completedAt,link 2>&1) || {
+        echo -e "  ${RED}ERROR: Failed to get checks for PR #$pr_number${RESET}"
+        return 1
+    }
+
+    # Filter for the specific check
+    check=$(echo "$checks_json" | jq -r --arg name "$CHECK_NAME" '[.[] | select(.name == $name)] | first // empty')
+
+    if [[ -z "$check" ]]; then
+        echo -e "  ${RED}Check '$CHECK_NAME' not found. Skipping.${RESET}"
+        return 1
+    fi
+
+    check_state=$(echo "$check" | jq -r '.state')
+    check_bucket=$(echo "$check" | jq -r '.bucket')
+    link=$(echo "$check" | jq -r '.link')
+    started_at=$(echo "$check" | jq -r '.startedAt')
+    completed_at=$(echo "$check" | jq -r '.completedAt')
+    return 0
+}
+
+fetch_on_push() {
+    local repo=$1
+    # on-push
+    sha=$(gh api repos/"$repo"/commits/main --jq '.sha' 2>/dev/null) || {
+        echo -e "  ${RED}ERROR: Failed to get SHA for $repo${RESET}"
+        return 1
+    }
+    pr_url="https://github.com/$repo/commit/$sha"
+    echo "  Commit $sha: $pr_url"
+
+    processed_items=$((processed_items + 1))
+
+    # Get check runs for this SHA
+    checks_json=$(gh api repos/"$repo"/commits/"$sha"/check-runs 2>/dev/null) || {
+        echo -e "  ${RED}ERROR: Failed to get check runs for $repo${RESET}"
+        return 1
+    }
+
+    # Filter for the specific check
+    check=$(echo "$checks_json" | jq -r --arg name "$CHECK_NAME" '.check_runs | [.[] | select(.name == $name)] | first // empty')
+
+    if [[ -z "$check" ]]; then
+        echo -e "  ${RED}Check '$CHECK_NAME' not found. Skipping.${RESET}"
+        return 1
+    fi
+
+    status=$(echo "$check" | jq -r '.status')
+    conclusion=$(echo "$check" | jq -r '.conclusion')
+    
+    check_state="$status"
+    if [[ "$status" != "completed" ]]; then
+        check_bucket="pending"
+    elif [[ "$conclusion" == "success" ]]; then
+        check_bucket="pass"
+    else
+        check_bucket="fail"
+    fi
+
+    link=$(echo "$check" | jq -r '.html_url')
+    started_at=$(echo "$check" | jq -r '.started_at')
+    completed_at=$(echo "$check" | jq -r '.completed_at')
+    return 0
+}
+
 # Main loop
 for i in $(seq "$start" "$end"); do
     repo="${REPO_BASE}$i"
@@ -159,85 +247,9 @@ for i in $(seq "$start" "$end"); do
     pr_url=""
 
     if [[ "$action" == "on-pull" ]]; then
-        # Get open PRs
-        pr_json=$(gh pr list -R "$repo" --state open --json number,url 2>&1) || {
-            echo -e "  ${RED}ERROR: Failed to list PRs for $repo${RESET}"
-            continue
-        }
-
-        pr_count=$(echo "$pr_json" | jq 'length')
-
-        if [[ "$pr_count" -ne 1 ]]; then
-            echo -e "  ${RED}ERROR: Expected 1 open PR, found $pr_count. Skipping.${RESET}"
-            continue
-        fi
-
-        processed_items=$((processed_items + 1))
-
-        pr_number=$(echo "$pr_json" | jq -r '.[0].number')
-        pr_url=$(echo "$pr_json" | jq -r '.[0].url')
-
-        echo "  PR #$pr_number: $pr_url"
-
-        # Get checks for this PR
-        checks_json=$(gh pr checks "$pr_number" -R "$repo" --json name,state,bucket,startedAt,completedAt,link 2>&1) || {
-            echo -e "  ${RED}ERROR: Failed to get checks for PR #$pr_number${RESET}"
-            continue
-        }
-
-        # Filter for the specific check
-        check=$(echo "$checks_json" | jq -r --arg name "$CHECK_NAME" '[.[] | select(.name == $name)] | first // empty')
-
-        if [[ -z "$check" ]]; then
-            echo -e "  ${RED}Check '$CHECK_NAME' not found. Skipping.${RESET}"
-            continue
-        fi
-
-        check_state=$(echo "$check" | jq -r '.state')
-        check_bucket=$(echo "$check" | jq -r '.bucket')
-        link=$(echo "$check" | jq -r '.link')
-        started_at=$(echo "$check" | jq -r '.startedAt')
-        completed_at=$(echo "$check" | jq -r '.completedAt')
+        fetch_on_pull "$repo" || continue
     else
-        # on-push
-        sha=$(gh api repos/"$repo"/commits/main --jq '.sha' 2>/dev/null) || {
-            echo -e "  ${RED}ERROR: Failed to get SHA for $repo${RESET}"
-            continue
-        }
-        pr_url="https://github.com/$repo/commit/$sha"
-        echo "  Commit $sha: $pr_url"
-
-        processed_items=$((processed_items + 1))
-
-        # Get check runs for this SHA
-        checks_json=$(gh api repos/"$repo"/commits/"$sha"/check-runs 2>/dev/null) || {
-            echo -e "  ${RED}ERROR: Failed to get check runs for $repo${RESET}"
-            continue
-        }
-
-        # Filter for the specific check
-        check=$(echo "$checks_json" | jq -r --arg name "$CHECK_NAME" '.check_runs | [.[] | select(.name == $name)] | first // empty')
-
-        if [[ -z "$check" ]]; then
-            echo -e "  ${RED}Check '$CHECK_NAME' not found. Skipping.${RESET}"
-            continue
-        fi
-
-        status=$(echo "$check" | jq -r '.status')
-        conclusion=$(echo "$check" | jq -r '.conclusion')
-        
-        check_state="$status"
-        if [[ "$status" != "completed" ]]; then
-            check_bucket="pending"
-        elif [[ "$conclusion" == "success" ]]; then
-            check_bucket="pass"
-        else
-            check_bucket="fail"
-        fi
-
-        link=$(echo "$check" | jq -r '.html_url')
-        started_at=$(echo "$check" | jq -r '.started_at')
-        completed_at=$(echo "$check" | jq -r '.completed_at')
+        fetch_on_push "$repo" || continue
     fi
 
     # Check if finished
