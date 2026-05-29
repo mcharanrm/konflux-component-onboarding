@@ -319,7 +319,7 @@ while IFS=',' read -r csv_repo csv_pr_url csv_pipelinerun csv_started csv_comple
         ytics="${ytics}, "
     fi
     ytics="${ytics}\"${label}\" $index"
-done < <(tail -n +2 "$CSV_FILE")
+done < <(tail -n +2 "$CSV_FILE" | sort -t',' -k1,1V)
 
 chart_height=$((index * 2 + 8))
 if [[ "$chart_height" -lt 20 ]]; then
