@@ -1,11 +1,66 @@
 #!/bin/bash
 set -euo pipefail
 
-# Input files
-PUSH_CSV="results-2026-05-29-push.csv"
-TEST_CSV="results-2026-05-29-test.csv"
-RELEASE_CSV="results-2026-05-29-release.csv"
+# Default values
+BUILD_CSV=""
+TEST_CSV=""
+RELEASE_CSV=""
 OUTPUT_PNG="results-combined.png"
+
+usage() {
+    echo "Usage: $0 --build <build.csv> --test <test.csv> --release <release.csv> [--output <output.png>]"
+    echo "Example: $0 --build results-push.csv --test results-test.csv --release results-release.csv"
+    echo ""
+    echo "Options:"
+    echo "  -b, --build    CSV file for Build/Push stage"
+    echo "  -t, --test     CSV file for Integration Test stage"
+    echo "  -r, --release  CSV file for Release stage"
+    echo "  -o, --output   Output PNG filename (default: results-combined.png)"
+    echo "  -h, --help     Show this help message"
+    exit 1
+}
+
+# Argument parsing
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -b|--build)
+            BUILD_CSV="$2"
+            shift 2
+            ;;
+        -t|--test)
+            TEST_CSV="$2"
+            shift 2
+            ;;
+        -r|--release)
+            RELEASE_CSV="$2"
+            shift 2
+            ;;
+        -o|--output)
+            OUTPUT_PNG="$2"
+            shift 2
+            ;;
+        -h|--help)
+            usage
+            ;;
+        *)
+            echo "ERROR: Unknown option: $1"
+            usage
+            ;;
+    esac
+done
+
+# Validation
+if [[ -z "$BUILD_CSV" || -z "$TEST_CSV" || -z "$RELEASE_CSV" ]]; then
+    echo "ERROR: --build, --test, and --release are all required."
+    usage
+fi
+
+for f in "$BUILD_CSV" "$TEST_CSV" "$RELEASE_CSV"; do
+    if [[ ! -f "$f" ]]; then
+        echo "ERROR: File not found: $f"
+        exit 1
+    fi
+done
 
 # Check dependencies
 if ! command -v gnuplot &>/dev/null; then
@@ -20,21 +75,18 @@ trap 'rm -f "$tmpdata" "$tmpgp"' EXIT
 
 echo "Processing data..."
 
-# We assume all CSVs have same repos in same order (or at least same repos exist)
-# We will use the list of repos from the PUSH_CSV as the master list
-repos=$(tail -n +2 "$PUSH_CSV" | cut -d',' -f1 | sort -V)
+# Use the list of repos from the BUILD_CSV as the master list
+repos=$(tail -n +2 "$BUILD_CSV" | cut -d',' -f1 | sort -V)
 
 index=0
 ytics=""
 while read -r repo; do
+    [[ -z "$repo" ]] && continue
     index=$((index + 1))
     label=${repo##*/}
-    
-    # Function to extract times and append to data
-    # Format: start_epoch index duration 0 color_index
-    
-    # 1. Push Build (Color 1: Blue)
-    line=$(grep "^${repo}," "$PUSH_CSV" || true)
+
+    # 1. Build (Color 1: Blue)
+    line=$(grep "^${repo}," "$BUILD_CSV" || true)
     if [[ -n "$line" ]]; then
         start=$(echo "$line" | cut -d',' -f4)
         end=$(echo "$line" | cut -d',' -f5)
@@ -71,7 +123,7 @@ while read -r repo; do
 done <<< "$repos"
 
 png_height=$((index * 15 + 300))
-if [[ "$png_height" -lt 800 ]]; then png_height=800; fi
+[[ "$png_height" -lt 800 ]] && png_height=800
 
 echo "Generating chart..."
 
