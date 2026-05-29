@@ -3,22 +3,6 @@
   ansible.builtin.debug:
     msg: "start creating build pipelines for {{ kflux_data.git_repo_name }}"
 
-- name: extract source repo name
-  ansible.builtin.set_fact:
-    source_repo_name: "{{ source_git_repo | basename | split('.') | first }}"
-
-- name: check whether source repo is already cloned
-  ansible.builtin.stat:
-    path: "../{{ git_workspace_dir }}/{{ source_repo_name }}"
-  register: source_repo_status
-
-- name: clone source repository
-  ansible.builtin.git:
-    repo: "{{ source_git_repo }}"
-    dest: "../{{ git_workspace_dir }}/{{ source_repo_name }}"
-    version: "{{ git_revision }}"
-    force: true
-
 - name: get details about the remote repository
   ansible.builtin.uri:
     url: "{{ gh_api.base_url + gh_api.get_repository.path }}/{{ kflux_data.git_repo_name }}"
@@ -42,9 +26,6 @@
   ansible.builtin.shell: |
     set -e
     cd ../{{ git_workspace_dir }}/{{ source_repo_name }}
-    git remote remove source-origin || true
-    git remote add source-origin {{ source_git_repo }}
-    git fetch source-origin {{ git_revision }}
     git clean -fd
     git reset --hard source-origin/{{ git_revision }}
     git checkout {{ git_revision }}

@@ -18,6 +18,25 @@
       - ansible.builtin.include_tasks:
           file: ../generate-resource-names/tasks.yaml
 
+    - name: extract source repo name
+      ansible.builtin.set_fact:
+        source_repo_name: "{{ source_git_repo | basename | split('.') | first }}"
+
+    - name: clone source repository once
+      ansible.builtin.git:
+        repo: "{{ source_git_repo }}"
+        dest: "../{{ git_workspace_dir }}/{{ source_repo_name }}"
+        version: "{{ git_revision }}"
+        force: true
+
+    - name: setup source remote and fetch once
+      ansible.builtin.shell: |
+        set -e
+        cd ../{{ git_workspace_dir }}/{{ source_repo_name }}
+        git remote remove source-origin || true
+        git remote add source-origin {{ source_git_repo }}
+        git fetch source-origin {{ git_revision }}
+
     - ansible.builtin.include_tasks:
         file: ../push-to-repositories/tasks.yaml
       vars:
