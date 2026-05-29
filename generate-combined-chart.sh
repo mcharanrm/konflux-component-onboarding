@@ -92,13 +92,13 @@ set title "Konflux Pipeline Timeline: Build (Blue) -> Test (Green) -> Release (R
 
 # Arrow styles for the 3 stages
 set style arrow 1 head filled size screen 0.005,15 lw 2 lc rgb "#0000FF" # Build: Blue
-set style arrow 2 head filled size screen 0.005,15 lw 2 lc rgb "#00FF00" # Test: Green
+set style arrow 2 head filled size screen 0.005,15 lw 2 lc rgb "#008000" # Test: Dark Green
 set style arrow 3 head filled size screen 0.005,15 lw 2 lc rgb "#FF0000" # Release: Red
 
 # Plot each stage by filtering the 5th column (color_index)
-plot "$tmpdata" using 1:($5==1?$2:1/0):3:4 with vectors as 1 title "Build", \
-     ""         using 1:($5==2?$2:1/0):3:4 with vectors as 2 title "Test", \
-     ""         using 1:($5==3?$2:1/0):3:4 with vectors as 3 title "Release"
+plot "$tmpdata" using 1:(\$5==1?\$2:1/0):3:4 with vectors as 1 title "Build", \
+     ""         using 1:(\$5==2?\$2:1/0):3:4 with vectors as 2 title "Test", \
+     ""         using 1:(\$5==3?\$2:1/0):3:4 with vectors as 3 title "Release"
 GNUPLOT
 
 gnuplot "$tmpgp"
