@@ -129,7 +129,7 @@ fi
 CSV_FILE="results.csv"
 
 if [[ ! -f "$CSV_FILE" ]]; then
-    echo "repo,pr_url,pipelinerun,started_at,completed_at,result" > "$CSV_FILE"
+    echo "repo,details,pipelinerun,started_at,completed_at,result" > "$CSV_FILE"
 fi
 
 # Counters
@@ -170,9 +170,9 @@ fetch_on_pull() {
     processed_items=$((processed_items + 1))
 
     pr_number=$(echo "$pr_json" | jq -r '.[0].number')
-    pr_url=$(echo "$pr_json" | jq -r '.[0].url')
+    details=$(echo "$pr_json" | jq -r '.[0].url')
 
-    echo "  PR #$pr_number: $pr_url"
+    echo "  PR #$pr_number: $details"
 
     # Get checks for this PR
     checks_json=$(gh pr checks "$pr_number" -R "$repo" --json name,state,bucket,startedAt,completedAt,link 2>&1) || {
@@ -203,8 +203,8 @@ fetch_on_push() {
         echo -e "  ${RED}ERROR: Failed to get SHA for $repo${RESET}"
         return 1
     }
-    pr_url="https://github.com/$repo/commit/$sha"
-    echo "  Commit $sha: $pr_url"
+    details="https://github.com/$repo/commit/$sha"
+    echo "  Commit $sha: $details"
 
     processed_items=$((processed_items + 1))
 
@@ -276,7 +276,7 @@ fetch_release() {
         check_bucket="fail"
     fi
 
-    pr_url="N/A"
+    details="N/A"
     link="oc ka get -n $namespace pipelinerun $pipelinerun"
 
     return 0
@@ -320,7 +320,7 @@ fetch_test() {
         check_bucket="fail"
     fi
 
-    pr_url="N/A"
+    details="N/A"
     link="oc ka get -n $namespace pipelinerun $pipelinerun"
 
     return 0
@@ -360,7 +360,7 @@ for i in $(seq "$start" "$end"); do
     completed_at=""
     pipelinerun=""
     link=""
-    pr_url=""
+    details=""
 
     if [[ "$action" == "on-pull" ]]; then
         fetch_on_pull "$repo" || continue
@@ -388,7 +388,7 @@ for i in $(seq "$start" "$end"); do
     if [[ "$check_bucket" != "pass" ]]; then
         echo -e "  ${RED}FAILED${RESET} | pipelinerun: $pipelinerun | $started_at -> $completed_at"
         echo -e "  ${YELLOW}Link: $link${RESET}"
-        echo "$repo,$pr_url,$pipelinerun,$started_at,$completed_at,fail" >> "$CSV_FILE"
+        echo "$repo,$details,$pipelinerun,$started_at,$completed_at,fail" >> "$CSV_FILE"
         continue
     fi
 
@@ -396,7 +396,7 @@ for i in $(seq "$start" "$end"); do
 
     echo -e "  ${GREEN}PASSED${RESET} | pipelinerun: $pipelinerun | $started_at -> $completed_at"
 
-    echo "$repo,$pr_url,$pipelinerun,$started_at,$completed_at,pass" >> "$CSV_FILE"
+    echo "$repo,$details,$pipelinerun,$started_at,$completed_at,pass" >> "$CSV_FILE"
 done
 
 # Summary
