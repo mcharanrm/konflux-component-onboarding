@@ -11,7 +11,7 @@
 
 - name: push source repo to {{ kflux_data.git_repo_name }}
   ansible.builtin.shell: |
-    set -e
+    set -ex
     cd ../{{ git_workspace_dir }}/{{ source_repo_name }}
     # Ensure workspace is clean and reset to pristine source revision
     git clean -fd
