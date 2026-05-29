@@ -36,6 +36,7 @@ Collect basic stats about the runs:
 
 Optionally you can merge these PRs (from `konflux-example-repo-*` branch):
 
+    date --utc -Iseconds > prs_start_time
     for i in {1..100}; do
         echo "# $i"
         gh pr merge konflux-example-repo-$i --rebase --delete-branch --repo jhutar/example-repo-$i
@@ -48,6 +49,10 @@ and trigger on-push build directly for releases to happen:
 Collect stats about on-push runs:
 
     ./check-konflux-prs.sh --action on-push --start 1 --end 100
+
+Collect stats about release runs:
+
+    ./check-konflux-prs.sh --action release --start 1 --end 100
 
 ## Linting and formatting
 

@@ -5,15 +5,19 @@ set -euo pipefail
 action=""
 start=""
 end=""
+after_time=""
 
 usage() {
-    echo "Usage: $0 --action <on-pull|on-push> --start <start> --end <end>"
+    echo "Usage: $0 --action <on-pull|on-push|release> --start <start> --end <end> [--after <timestamp>]"
     echo "Example: $0 --action on-push --start 1 --end 10"
+    echo "Example: $0 --action release --start 1 --end 10 --after \"2026-05-29T10:39:56Z\""
     echo ""
     echo "Options:"
-    echo "  -a, --action  Action to check (on-pull or on-push)"
+    echo "  -a, --action  Action to check (on-pull, on-push, or release)"
     echo "  -s, --start   Start index of the repository range"
     echo "  -e, --end     End index of the repository range"
+    echo "  --after       Filter for pipelineruns after this UTC timestamp (release action only)"
+    echo "                Defaults to content of 'prs_start_time' file if it exists."
     echo "  -h, --help    Show this help message"
     exit 1
 }
@@ -33,6 +37,10 @@ while [[ $# -gt 0 ]]; do
             end="$2"
             shift 2
             ;;
+        --after)
+            after_time="$2"
+            shift 2
+            ;;
         -h|--help)
             usage
             ;;
@@ -49,8 +57,8 @@ if [[ -z "$action" ]]; then
     usage
 fi
 
-if [[ "$action" != "on-pull" && "$action" != "on-push" ]]; then
-    echo "ERROR: --action must be 'on-pull' or 'on-push'."
+if [[ "$action" != "on-pull" && "$action" != "on-push" && "$action" != "release" ]]; then
+    echo "ERROR: --action must be 'on-pull', 'on-push', or 'release'."
     usage
 fi
 
@@ -69,6 +77,17 @@ if [[ "$start" -gt "$end" ]]; then
     exit 1
 fi
 
+# Load after_time from file if not provided for release action
+if [[ "$action" == "release" && -z "$after_time" ]]; then
+    if [[ -f "prs_start_time" ]]; then
+        after_time=$(cat prs_start_time)
+        echo "Using start time from prs_start_time: $after_time"
+    else
+        echo "ERROR: --after or prs_start_time file is required for release action."
+        exit 1
+    fi
+fi
+
 # Check dependencies
 if ! command -v gh &>/dev/null; then
     echo "ERROR: 'gh' is not installed."
@@ -82,6 +101,11 @@ fi
 
 if ! command -v gnuplot &>/dev/null; then
     echo "ERROR: 'gnuplot' is not installed."
+    exit 1
+fi
+
+if [[ "$action" == "release" ]] && ! command -v oc &>/dev/null; then
+    echo "ERROR: 'oc' (and 'oc ka' plugin) is required for release action."
     exit 1
 fi
 
@@ -116,9 +140,12 @@ skipped=0
 
 # === Scenario configuration ===
 REPO_BASE="jhutar/example-repo-"
+APP_NAME="jhutar-app"
+TENANT_PREFIX="test-rhtap-"
+
 if [[ "$action" == "on-pull" ]]; then
     CHECK_NAME="Konflux Staging / jhutar-comp-on-pull-request"
-else
+elif [[ "$action" == "on-push" ]]; then
     CHECK_NAME="Konflux Staging / jhutar-comp-on-push"
 fi
 
@@ -210,6 +237,48 @@ fetch_on_push() {
     return 0
 }
 
+fetch_release() {
+    local index=$1
+    local namespace="${TENANT_PREFIX}${index}-tenant"
+    
+    echo "  Checking release in $namespace..."
+    
+    # Use oc ka to get the pipelinerun
+    plr_json=$(oc ka get -n "$namespace" pipelinerun --selector "appstudio.openshift.io/application=$APP_NAME,appstudio.openshift.io/service=release" --limit 1 --after "$after_time" -o json 2>/dev/null) || {
+        echo -e "  ${RED}ERROR: Failed to get Release PipelineRuns in $namespace${RESET}"
+        return 1
+    }
+    
+    count=$(echo "$plr_json" | jq '.items | length')
+    if [[ "$count" -eq 0 ]]; then
+        echo -e "  ${RED}Release PipelineRun not found (after $after_time). Skipping.${RESET}"
+        return 1
+    fi
+    
+    item=$(echo "$plr_json" | jq '.items[0]')
+    pipelinerun=$(echo "$item" | jq -r '.metadata.name')
+    started_at=$(echo "$item" | jq -r '.status.startTime // empty')
+    completed_at=$(echo "$item" | jq -r '.status.completionTime // empty')
+    
+    if [[ -z "$started_at" || -z "$completed_at" ]]; then
+        check_bucket="pending"
+        return 0
+    fi
+    
+    # Determine result
+    succeeded=$(echo "$item" | jq -r '.status.conditions[] | select(.type == "Succeeded") | .status')
+    if [[ "$succeeded" == "True" ]]; then
+        check_bucket="pass"
+    else
+        check_bucket="fail"
+    fi
+    
+    pr_url="N/A"
+    link="oc ka get -n $namespace pipelinerun $pipelinerun"
+    
+    return 0
+}
+
 # Main loop
 for i in $(seq "$start" "$end"); do
     repo="${REPO_BASE}$i"
@@ -248,19 +317,24 @@ for i in $(seq "$start" "$end"); do
 
     if [[ "$action" == "on-pull" ]]; then
         fetch_on_pull "$repo" || continue
-    else
+    elif [[ "$action" == "on-push" ]]; then
         fetch_on_push "$repo" || continue
+    elif [[ "$action" == "release" ]]; then
+        fetch_release "$i" || continue
     fi
 
     # Check if finished
     if [[ "$check_bucket" == "pending" ]]; then
-        echo -e "  ${YELLOW}Check not finished yet (state: $check_state). Skipping.${RESET}"
+        echo -e "  ${YELLOW}Check not finished yet (state: ${check_state:-pending}). Skipping.${RESET}"
         continue
     fi
 
     check_finished=$((check_finished + 1))
 
-    pipelinerun=$(echo "$link" | grep -oP '[^/]+$')
+    # For release action, pipelinerun is already extracted
+    if [[ "$action" != "release" ]]; then
+        pipelinerun=$(echo "$link" | grep -oP '[^/]+$')
+    fi
 
     if [[ "$check_bucket" != "pass" ]]; then
         echo -e "  ${RED}FAILED${RESET} | pipelinerun: $pipelinerun | $started_at -> $completed_at"
@@ -279,11 +353,13 @@ done
 # Summary
 echo ""
 echo -e "${BOLD}=== Summary ===${RESET}"
-echo "  Total repos checked: $total"
+echo "  Total items checked: $total"
 if [[ "$action" == "on-pull" ]]; then
     echo "  Repos with 1 PR:     $processed_items"
-else
+elif [[ "$action" == "on-push" ]]; then
     echo "  Repos checked (push): $processed_items"
+else
+    echo "  Tenants checked:     $total"
 fi
 echo -e "  Checks finished:     $check_finished"
 echo -e "  Checks ${GREEN}passed${RESET}:        $check_passed"
