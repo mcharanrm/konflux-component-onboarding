@@ -24,14 +24,22 @@
 
 - name: prepare pristine workspace
   ansible.builtin.shell: |
-    set -e
+    set -ex
     cd ../{{ git_workspace_dir }}/{{ source_repo_name }}
+    # Setup target remote
     git remote remove {{ kflux_data.git_repo_name }} || true
     git remote add {{ kflux_data.git_repo_name }} {{ get_repository_response.json.ssh_url }}
+    # Pull latest commits from target repo
     git fetch {{ kflux_data.git_repo_name }} {{ git_revision }}
+    # Removes all untracked files/folders
     git clean -fd
+    # Move local HEAD to match target remote main branch
     git reset --hard {{ kflux_data.git_repo_name }}/{{ git_revision }}
     git checkout {{ git_revision }}
+    # Delete local branch if exists and recreate from pristine target revision
+    git branch -D konflux-{{ kflux_data.git_repo_name }} || true
+    git push {{ kflux_data.git_repo_name }} --delete konflux-{{ kflux_data.git_repo_name }} || true
+    git checkout -b konflux-{{ kflux_data.git_repo_name }} {{ kflux_data.git_repo_name }}/{{ git_revision }}
 
 - name: Create .tekton directory for pipeline files
   ansible.builtin.file:
@@ -59,15 +67,8 @@
 
 - name: create feature branch and commit changes
   ansible.builtin.shell: |
-    set -e
+    set -ex
     cd ../{{ git_workspace_dir }}/{{ source_repo_name }}
-    # Setup target remote
-    git remote remove {{ kflux_data.git_repo_name }} || true
-    git remote add {{ kflux_data.git_repo_name }} {{ get_repository_response.json.ssh_url }}
-    # Delete local branch if exists and recreate from pristine target revision
-    git branch -D konflux-{{ kflux_data.git_repo_name }} || true
-    git push {{ kflux_data.git_repo_name }} --delete konflux-{{ kflux_data.git_repo_name }} || true
-    git checkout -b konflux-{{ kflux_data.git_repo_name }} {{ kflux_data.git_repo_name }}/{{ git_revision }}
     # Rendered templates are now 'untracked', add them
     git add .tekton/
     git commit -m "Add tekton build pipelines"
