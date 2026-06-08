@@ -47,6 +47,9 @@ source_git_repo: "git@github.com:mcharanrm/example-fedora-konflux-libecpg-perf-f
 # Temporary workspace/directory for generating build pipelines, committing it and creating pull requests
 git_workspace_dir: "build-pipelines-workspace"
 
+# Path to RPM build pipeline
+rpmbuild_pipeline_url: "https://github.com/mcharanrm/rpmbuild-pipeline.git"
+
 # Path to read GitHub PATs
 github_pat_file: "{{ ansible_facts['user_dir'] + '/.github-pat.json' }}"
 
