@@ -40,6 +40,7 @@
     git branch -D konflux-{{ kflux_data.git_repo_name }} || true
     git push {{ kflux_data.git_repo_name }} --delete konflux-{{ kflux_data.git_repo_name }} || true
     git checkout -b konflux-{{ kflux_data.git_repo_name }} {{ kflux_data.git_repo_name }}/{{ git_revision }}
+    ###git rm -r .tekton/ || true   # Cleanup possible previously existing .tekton/ files
 
 - name: Create .tekton directory for pipeline files
   ansible.builtin.file:
