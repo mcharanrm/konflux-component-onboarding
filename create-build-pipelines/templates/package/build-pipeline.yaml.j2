@@ -42,13 +42,17 @@ spec:
         - aarch64
     - name: ociStorage
       value: quay.io/{{ gh_api.kflux_gh_app.installation.quay_org }}/{{ kflux_data.knflux_tenant_name }}/{{ kflux_data.knflux_comp_name }}:on-pr-{{'{{revision}}'}}
+    - name: self-ref-url
+      value: "{{ rpmbuild_pipeline_url }}"
+    - name: self-ref-revision
+      value: "{{ rpmbuild_pipeline_latest_revision }}"
   pipelineRef:
     resolver: git
     params:
       - name: url
-        value: https://github.com/konflux-ci/rpmbuild-pipeline.git 
+        value: "{{ rpmbuild_pipeline_url }}"
       - name: revision
-        value: "main"
+        value: "{{ rpmbuild_pipeline_latest_revision }}"
       - name: pathInRepo
         value: pipeline/build-rpm-package.yaml
   workspaces:

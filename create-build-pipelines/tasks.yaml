@@ -44,6 +44,15 @@
     path: "../{{ git_workspace_dir }}/{{ source_repo_name }}/.tekton"
     state: directory
 
+- name: Retrieve the latest commit hash from rpmbuild-pipeline main
+  ansible.builtin.shell: |
+    git ls-remote {{ rpmbuild_pipeline_url }} refs/heads/main | awk '{print $1}'
+  register: git_ls_remote_command_status
+
+- name: Set commit hash to use in the build pipelines for revision parameter
+  ansible.builtin.set_fact:
+    rpmbuild_pipeline_latest_revision: "{{ git_ls_remote_command_status.stdout }}"
+
 - name: render build pipeline templates
   ansible.builtin.template:
     src: ../create-build-pipelines/templates/{{ component_overlay }}/build-pipeline.yaml.j2
