@@ -1,0 +1,46 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+patches:
+  # JSON patch
+  - target:
+      kind: Application 
+      name: app
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: fedora-on-konflux-libecpg-perfscale-app-6142 
+      - op: replace
+        path: /metadata/namespace
+        value: konflux-fedora-perfscale-tenant
+      - op: replace 
+        path: /spec/displayName
+        value: fedora-on-konflux-libecpg-perfscale-app-6142
+  - target:
+      kind: Component
+      name: comp
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: fedora-on-konflux-libecpg-perfscale-comp-6142      
+      - op: replace
+        path: /metadata/namespace
+        value: konflux-fedora-perfscale-tenant
+      - op: replace
+        path: /spec/application
+        value: fedora-on-konflux-libecpg-perfscale-app-6142
+      - op: replace
+        path: /spec/componentName
+        value: fedora-on-konflux-libecpg-perfscale-comp-6142
+      - op: replace
+        path: /spec/source/git/dockerfileUrl
+        value: Dockerfile.scratch
+      - op: replace
+        path: /spec/source/git/url
+        value: https://github.com/mcharanrm/fedora-on-konflux-libecpg-perfscale-repo-6142.git
+      - op: replace
+        path: /spec/source/git/revision
+        value: master
+
+resources:
+  - ../../../../create-konflux-manifests/overlays/package
